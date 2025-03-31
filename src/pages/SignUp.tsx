@@ -78,12 +78,16 @@ const SignUp = () => {
           <Link to="/" className="inline-block mb-6">
             <h1 className="text-3xl font-bold text-sala7li-primary">Sala7li</h1>
           </Link>
-          <h2 className="text-3xl font-bold text-gray-900">Create a new account</h2>
+          <h2 className="text-3xl font-bold text-gray-900">Create a customer account</h2>
           <p className="mt-2 text-gray-600">
-            Or{" "}
+            Already have an account?{" "}
             <Link to="/signin" className="text-sala7li-primary hover:underline">
-              sign in to your existing account
+              Sign in
             </Link>
+          </p>
+          <p className="mt-2 text-sm text-gray-500">
+            Staff members (Fixers, Operators, Collectors) cannot register here.
+            <br />Please contact your administrator for login credentials.
           </p>
         </div>
         
@@ -191,7 +195,7 @@ const SignUp = () => {
               </div>
               
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Creating account..." : "Create account"}
+                {loading ? "Creating account..." : "Create customer account"}
               </Button>
             </form>
             
