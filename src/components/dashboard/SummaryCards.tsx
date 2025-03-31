@@ -11,7 +11,7 @@ interface SummaryCardsProps {
 
 const SummaryCards = ({ totalRepairs, completedCount, pendingCount, inProgressCount }: SummaryCardsProps) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-gray-500">Total Repairs</CardTitle>

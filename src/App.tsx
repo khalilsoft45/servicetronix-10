@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "./context/LanguageContext";
 import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 // Pages
 import HomePage from "./pages/HomePage";
@@ -40,11 +41,46 @@ const App = () => (
               <Route path="/" element={<HomePage />} />
               <Route path="/signin" element={<SignIn />} />
               <Route path="/signup" element={<SignUp />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/fixer" element={<FixerDashboard />} />
-              <Route path="/operator" element={<OperatorDashboard />} />
-              <Route path="/collector" element={<CollectorDashboard />} />
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute allowedRoles={["user"]}>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin" 
+                element={
+                  <ProtectedRoute allowedRoles={["admin"]}>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/fixer" 
+                element={
+                  <ProtectedRoute allowedRoles={["fixer"]}>
+                    <FixerDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/operator" 
+                element={
+                  <ProtectedRoute allowedRoles={["operator"]}>
+                    <OperatorDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/collector" 
+                element={
+                  <ProtectedRoute allowedRoles={["collector"]}>
+                    <CollectorDashboard />
+                  </ProtectedRoute>
+                } 
+              />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </TooltipProvider>
