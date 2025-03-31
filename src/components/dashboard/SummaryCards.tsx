@@ -1,14 +1,15 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Clock, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Clock, CheckCircle2, AlertTriangle, Timer } from "lucide-react";
 
 interface SummaryCardsProps {
   totalRepairs: number;
   completedCount: number;
   pendingCount: number;
+  inProgressCount: number;
 }
 
-const SummaryCards = ({ totalRepairs, completedCount, pendingCount }: SummaryCardsProps) => {
+const SummaryCards = ({ totalRepairs, completedCount, pendingCount, inProgressCount }: SummaryCardsProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <Card>
@@ -48,6 +49,20 @@ const SummaryCards = ({ totalRepairs, completedCount, pendingCount }: SummaryCar
             <div className="text-3xl font-bold">{pendingCount}</div>
             <div className="ml-auto bg-yellow-100 p-2 rounded-full">
               <AlertTriangle className="h-5 w-5 text-yellow-600" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium text-gray-500">In Progress</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center">
+            <div className="text-3xl font-bold">{inProgressCount}</div>
+            <div className="ml-auto bg-purple-100 p-2 rounded-full">
+              <Timer className="h-5 w-5 text-purple-600" />
             </div>
           </div>
         </CardContent>
