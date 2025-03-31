@@ -7,10 +7,13 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { User, Mail, Lock, Phone } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
+import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 
 const SignUp = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -76,26 +79,28 @@ const SignUp = () => {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <Link to="/" className="inline-block mb-6">
-            <h1 className="text-3xl font-bold text-sala7li-primary">Sala7li</h1>
+            <h1 className="text-3xl font-bold text-sala7li-primary">{t('app.name')}</h1>
           </Link>
-          <h2 className="text-3xl font-bold text-gray-900">Create a customer account</h2>
+          <h2 className="text-3xl font-bold text-gray-900">{t('auth.signup.title')}</h2>
           <p className="mt-2 text-gray-600">
-            Already have an account?{" "}
+            {t('auth.already.account')}{" "}
             <Link to="/signin" className="text-sala7li-primary hover:underline">
-              Sign in
+              {t('auth.signin')}
             </Link>
           </p>
           <p className="mt-2 text-sm text-gray-500">
-            Staff members (Fixers, Operators, Collectors) cannot register here.
-            <br />Please contact your administrator for login credentials.
+            {t('auth.staff.register.note')}
           </p>
+          <div className="mt-2 flex justify-center">
+            <LanguageSwitcher />
+          </div>
         </div>
         
         <Card>
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name">{t('auth.name')}</Label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <User className="h-5 w-5 text-gray-400" />
@@ -115,7 +120,7 @@ const SignUp = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('auth.email')}</Label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Mail className="h-5 w-5 text-gray-400" />
@@ -135,7 +140,7 @@ const SignUp = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="phone">{t('auth.phone')}</Label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Phone className="h-5 w-5 text-gray-400" />
@@ -155,7 +160,7 @@ const SignUp = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('auth.password')}</Label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Lock className="h-5 w-5 text-gray-400" />
@@ -175,7 +180,7 @@ const SignUp = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Label htmlFor="confirmPassword">{t('auth.confirm.password')}</Label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Lock className="h-5 w-5 text-gray-400" />
@@ -195,13 +200,13 @@ const SignUp = () => {
               </div>
               
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Creating account..." : "Create customer account"}
+                {loading ? t('auth.signup.button') + "..." : t('auth.signup.button')}
               </Button>
             </form>
             
             <div className="mt-4 flex items-center">
               <div className="flex-grow h-px bg-gray-200"></div>
-              <p className="mx-4 text-sm text-gray-400">or continue with</p>
+              <p className="mx-4 text-sm text-gray-400">{t('auth.or')}</p>
               <div className="flex-grow h-px bg-gray-200"></div>
             </div>
             
@@ -231,17 +236,17 @@ const SignUp = () => {
                 />
                 <path d="M1 1h22v22H1z" fill="none" />
               </svg>
-              Sign up with Google
+              {t('auth.google')}
             </Button>
             
             <p className="mt-4 text-xs text-gray-500 text-center">
-              By signing up, you agree to our{" "}
+              {t('auth.terms')}{" "}
               <a href="#" className="text-sala7li-primary hover:underline">
-                Terms of Service
+                {t('auth.terms.service')}
               </a>{" "}
-              and{" "}
+              {t('auth.and')}{" "}
               <a href="#" className="text-sala7li-primary hover:underline">
-                Privacy Policy
+                {t('auth.privacy.policy')}
               </a>
               .
             </p>

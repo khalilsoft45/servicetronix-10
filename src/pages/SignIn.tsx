@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Mail, Lock, LogIn } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
+import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import {
   Select,
   SelectContent,
@@ -18,6 +20,7 @@ import {
 const SignIn = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -95,22 +98,25 @@ const SignIn = () => {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <Link to="/" className="inline-block mb-6">
-            <h1 className="text-3xl font-bold text-sala7li-primary">Sala7li</h1>
+            <h1 className="text-3xl font-bold text-sala7li-primary">{t('app.name')}</h1>
           </Link>
-          <h2 className="text-3xl font-bold text-gray-900">Sign in to your account</h2>
+          <h2 className="text-3xl font-bold text-gray-900">{t('auth.signin.title')}</h2>
           <p className="mt-2 text-gray-600">
-            New customer?{" "}
+            {t('auth.new.customer')}{" "}
             <Link to="/signup" className="text-sala7li-primary hover:underline">
-              Create a customer account
+              {t('auth.create.account')}
             </Link>
           </p>
+          <div className="mt-2 flex justify-center">
+            <LanguageSwitcher />
+          </div>
         </div>
         
         <Card>
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('auth.email')}</Label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Mail className="h-5 w-5 text-gray-400" />
@@ -131,9 +137,9 @@ const SignIn = () => {
               
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">{t('auth.password')}</Label>
                   <a href="#" className="text-sm text-sala7li-primary hover:underline">
-                    Forgot password?
+                    {t('auth.forgot.password')}
                   </a>
                 </div>
                 <div className="relative">
@@ -155,31 +161,31 @@ const SignIn = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="role">Sign in as</Label>
+                <Label htmlFor="role">{t('auth.signin.as')}</Label>
                 <Select
                   value={formData.role}
                   onValueChange={handleRoleChange}
                 >
                   <SelectTrigger id="role" className="w-full">
-                    <SelectValue placeholder="Select your role" />
+                    <SelectValue placeholder={t('auth.signin.as')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="user">Customer</SelectItem>
-                    <SelectItem value="admin">Administrator</SelectItem>
-                    <SelectItem value="fixer">Fixer/Technician</SelectItem>
-                    <SelectItem value="operator">Phone Operator</SelectItem>
-                    <SelectItem value="collector">Collector</SelectItem>
+                    <SelectItem value="user">{t('auth.role.customer')}</SelectItem>
+                    <SelectItem value="admin">{t('auth.role.admin')}</SelectItem>
+                    <SelectItem value="fixer">{t('auth.role.fixer')}</SelectItem>
+                    <SelectItem value="operator">{t('auth.role.operator')}</SelectItem>
+                    <SelectItem value="collector">{t('auth.role.collector')}</SelectItem>
                   </SelectContent>
                 </Select>
                 {formData.role !== "user" && (
                   <p className="text-xs text-amber-600">
-                    Staff members: Use the credentials provided by your administrator.
+                    {t('auth.staff.note')}
                   </p>
                 )}
               </div>
               
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Signing in..." : "Sign in"}
+                {loading ? t('auth.signin.button') + "..." : t('auth.signin.button')}
               </Button>
             </form>
             
@@ -187,7 +193,7 @@ const SignIn = () => {
               <>
                 <div className="mt-4 flex items-center">
                   <div className="flex-grow h-px bg-gray-200"></div>
-                  <p className="mx-4 text-sm text-gray-400">or continue with</p>
+                  <p className="mx-4 text-sm text-gray-400">{t('auth.or')}</p>
                   <div className="flex-grow h-px bg-gray-200"></div>
                 </div>
                 
@@ -217,7 +223,7 @@ const SignIn = () => {
                     />
                     <path d="M1 1h22v22H1z" fill="none" />
                   </svg>
-                  Sign in with Google
+                  {t('auth.google')}
                 </Button>
               </>
             )}
