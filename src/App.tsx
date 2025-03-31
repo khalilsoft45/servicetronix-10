@@ -17,11 +17,19 @@ import OperatorDashboard from "./pages/OperatorDashboard";
 import CollectorDashboard from "./pages/CollectorDashboard";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+// Initialize the query client with default options that ensure users see feedback
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <LanguageProvider>
+    <LanguageProvider defaultLanguage="fr">
       <TooltipProvider>
         <Toaster />
         <Sonner />

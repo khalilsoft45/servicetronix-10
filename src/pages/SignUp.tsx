@@ -88,9 +88,6 @@ const SignUp = () => {
               {t('auth.signin')}
             </Link>
           </p>
-          <p className="mt-2 text-sm text-gray-500">
-            {t('auth.staff.register.note')}
-          </p>
           <div className="mt-2 flex justify-center">
             <LanguageSwitcher />
           </div>
