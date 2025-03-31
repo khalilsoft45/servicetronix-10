@@ -9,7 +9,7 @@ export const filterRepairsBySearch = (repairs: any[], searchQuery: string) => {
   const query = searchQuery.toLowerCase();
   
   return repairs.filter(repair => 
-    repair.device.toLowerCase().includes(query) ||
+    repair.deviceType.toLowerCase().includes(query) ||
     repair.issue.toLowerCase().includes(query) ||
     repair.id.toLowerCase().includes(query)
   );

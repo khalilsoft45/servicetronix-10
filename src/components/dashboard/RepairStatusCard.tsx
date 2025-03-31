@@ -1,21 +1,7 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Clock, CheckCircle, Wrench, Truck, Phone, DollarSign, XCircle, User } from "lucide-react";
-
-export type RepairStatus = 
-  | "pending_confirmation" 
-  | "awaiting_collection" 
-  | "in_repair" 
-  | "waiting_price_confirmation"
-  | "repair_in_progress"
-  | "fixed_awaiting_delivery" 
-  | "repair_rejected"
-  | "price_rejected"
-  | "price_confirmed_in_repair"
-  | "rejected"
-  | "confirmed_awaiting_collection"
-  | "completed";
+import { RepairStatus } from "@/types/repair";
 
 interface RepairStatusCardProps {
   id: string;

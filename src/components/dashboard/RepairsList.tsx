@@ -1,17 +1,17 @@
 
 import RepairStatusCard from "@/components/dashboard/RepairStatusCard";
-import { RepairStatus } from "@/types/dashboard";
+import { RepairStatus } from "@/types/repair";
 
 interface RepairsListProps {
   repairs: {
     id: string;
-    device: string;
+    deviceType: string;
     issue: string;
     status: RepairStatus;
-    dateCreated: string;
+    dateAssigned: string;
     lastUpdated: string;
     price?: number;
-    fixerNotes?: string;
+    notes?: string;
     assignedFixer?: string;
   }[];
   showEmptyMessage?: boolean;
@@ -25,13 +25,13 @@ const RepairsList = ({ repairs, showEmptyMessage = true }: RepairsListProps) => 
           <RepairStatusCard
             key={repair.id}
             id={repair.id}
-            device={repair.device}
+            device={repair.deviceType}
             issue={repair.issue}
             status={repair.status}
-            dateCreated={repair.dateCreated}
+            dateCreated={repair.dateAssigned}
             lastUpdated={repair.lastUpdated}
             price={repair.price}
-            fixerNotes={repair.fixerNotes}
+            fixerNotes={repair.notes}
             assignedFixer={repair.assignedFixer}
           />
         ))
