@@ -1,12 +1,16 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Clock, CheckCircle, Wrench, Truck, Phone } from "lucide-react";
+import { ArrowRight, Clock, CheckCircle, Wrench, Truck, Phone, DollarSign, XCircle } from "lucide-react";
 
 type RepairStatus = 
   | "pending_confirmation" 
   | "awaiting_collection" 
   | "in_repair" 
+  | "waiting_price_confirmation"
+  | "repair_in_progress"
   | "fixed_awaiting_delivery" 
+  | "repair_rejected"
   | "completed";
 
 interface RepairStatusCardProps {
@@ -16,6 +20,7 @@ interface RepairStatusCardProps {
   status: RepairStatus;
   dateCreated: string;
   lastUpdated: string;
+  price?: number;
 }
 
 const RepairStatusCard = ({
@@ -25,6 +30,7 @@ const RepairStatusCard = ({
   status,
   dateCreated,
   lastUpdated,
+  price,
 }: RepairStatusCardProps) => {
   const getStatusInfo = (status: RepairStatus) => {
     switch (status) {
@@ -47,14 +53,35 @@ const RepairStatusCard = ({
           label: "In Repair",
           color: "bg-purple-100 text-purple-800",
           icon: Wrench,
+          description: "Your device is with our technician for diagnosis.",
+        };
+      case "waiting_price_confirmation":
+        return {
+          label: "Waiting for Approval",
+          color: "bg-orange-100 text-orange-800",
+          icon: DollarSign,
+          description: "Waiting for your approval of the repair price.",
+        };
+      case "repair_in_progress":
+        return {
+          label: "Repair in Progress",
+          color: "bg-indigo-100 text-indigo-800",
+          icon: Wrench,
           description: "Your device is currently being repaired by our technician.",
         };
       case "fixed_awaiting_delivery":
         return {
           label: "Fixed & Awaiting Delivery",
-          color: "bg-indigo-100 text-indigo-800",
+          color: "bg-green-100 text-green-800",
           icon: Truck,
           description: "Your device has been fixed and will be delivered soon.",
+        };
+      case "repair_rejected":
+        return {
+          label: "Repair Rejected",
+          color: "bg-red-100 text-red-800",
+          icon: XCircle,
+          description: "The repair was not approved. Device will be returned.",
         };
       case "completed":
         return {
@@ -97,6 +124,13 @@ const RepairStatusCard = ({
             <h4 className="font-medium text-sm text-gray-500">Issue</h4>
             <p>{issue}</p>
           </div>
+          
+          {price !== undefined && (
+            <div>
+              <h4 className="font-medium text-sm text-gray-500">Repair Price</h4>
+              <p className="font-medium">${price.toFixed(2)}</p>
+            </div>
+          )}
           
           <div className="pt-2 border-t border-gray-100">
             <div className="flex items-center space-x-2 text-sm text-gray-500 mb-1">

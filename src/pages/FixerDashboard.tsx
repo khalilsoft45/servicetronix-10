@@ -9,10 +9,11 @@ import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useToast } from "@/components/ui/use-toast";
-import { Search, Clock, CheckCircle2, AlertTriangle, Wrench, X, DollarSign } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Search, Clock, CheckCircle2, AlertTriangle, Wrench, X, DollarSign, Bell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import NotificationItem, { NotificationType } from "@/components/dashboard/NotificationItem";
 
 // Sample assigned repairs data
 const assignedRepairsData = [
@@ -49,6 +50,28 @@ const assignedRepairsData = [
     price: 150,
     notes: "Waiting for replacement screen to arrive from supplier.",
   },
+  {
+    id: "REP-007",
+    clientName: "Sarah Johnson",
+    deviceType: "HP Spectre x360",
+    issue: "Laptop not powering on at all.",
+    status: "assigned",
+    dateAssigned: "2023-06-16",
+    estimatedCompletion: "",
+    price: null,
+    notes: "",
+  },
+  {
+    id: "REP-008",
+    clientName: "Robert Davis",
+    deviceType: "iPad Air 2022",
+    issue: "Touch screen unresponsive in certain areas.",
+    status: "waiting_client_approval",
+    dateAssigned: "2023-06-14",
+    estimatedCompletion: "2023-06-19",
+    price: 110,
+    notes: "Need to replace touch digitizer.",
+  },
 ];
 
 // Sample completed repairs data
@@ -77,18 +100,54 @@ const completedRepairsData = [
   },
 ];
 
+// Sample notifications
+const sampleNotifications = [
+  {
+    id: "NOTIF-001",
+    type: "info" as NotificationType,
+    title: "New Repair Assigned",
+    message: "You've been assigned to repair HP Spectre x360 (REP-007).",
+    time: "1 hour ago",
+    isNew: true,
+    repairId: "REP-007"
+  },
+  {
+    id: "NOTIF-002",
+    type: "success" as NotificationType,
+    title: "Repair Price Approved",
+    message: "The client has approved the price for REP-002. You can proceed with the repair.",
+    time: "3 hours ago",
+    isNew: true,
+    repairId: "REP-002"
+  },
+  {
+    id: "NOTIF-003",
+    type: "warning" as NotificationType,
+    title: "Repair Price Rejected",
+    message: "The client has rejected the price for iPad repair. The device will be returned.",
+    time: "1 day ago",
+    isNew: false,
+    repairId: "REP-008"
+  }
+];
+
 const FixerDashboard = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
   const [assignedRepairs, setAssignedRepairs] = useState(assignedRepairsData);
   const [completedRepairs, setCompletedRepairs] = useState(completedRepairsData);
+  const [notifications, setNotifications] = useState(sampleNotifications);
   const [searchQuery, setSearchQuery] = useState("");
   const [repairDetails, setRepairDetails] = useState<any>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [priceDialogOpen, setPriceDialogOpen] = useState(false);
+  const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
   const [priceForm, setPriceForm] = useState({
     price: "",
     estimatedCompletion: "",
+    notes: "",
+  });
+  const [completeForm, setCompleteForm] = useState({
     notes: "",
   });
 
@@ -111,6 +170,14 @@ const FixerDashboard = () => {
     setPriceDialogOpen(true);
   };
 
+  const handleCompleteRepair = (repair: any) => {
+    setRepairDetails(repair);
+    setCompleteForm({
+      notes: repair.notes || "",
+    });
+    setCompleteDialogOpen(true);
+  };
+
   const handlePriceSubmit = () => {
     const updatedRepairs = assignedRepairs.map(repair => {
       if (repair.id === repairDetails.id) {
@@ -119,7 +186,7 @@ const FixerDashboard = () => {
           price: parseFloat(priceForm.price),
           estimatedCompletion: priceForm.estimatedCompletion,
           notes: priceForm.notes,
-          status: "in_progress",
+          status: "waiting_client_approval",
         };
       }
       return repair;
@@ -133,13 +200,13 @@ const FixerDashboard = () => {
     });
   };
 
-  const handleMarkComplete = (repairId: string) => {
+  const handleCompleteSubmit = () => {
     // Find the repair to mark as complete
-    const repairToComplete = assignedRepairs.find(repair => repair.id === repairId);
+    const repairToComplete = assignedRepairs.find(repair => repair.id === repairDetails.id);
     if (!repairToComplete) return;
 
     // Remove from assigned repairs
-    setAssignedRepairs(assignedRepairs.filter(repair => repair.id !== repairId));
+    setAssignedRepairs(assignedRepairs.filter(repair => repair.id !== repairDetails.id));
 
     // Add to completed repairs with today's date
     setCompletedRepairs([
@@ -147,14 +214,31 @@ const FixerDashboard = () => {
         ...repairToComplete,
         status: "completed",
         dateCompleted: new Date().toISOString().split('T')[0],
+        notes: completeForm.notes,
       },
       ...completedRepairs,
     ]);
 
+    setCompleteDialogOpen(false);
     toast({
       title: "Repair marked as complete",
-      description: `Repair ${repairId} has been marked as completed.`,
+      description: `Repair ${repairDetails.id} has been marked as completed.`,
     });
+  };
+
+  const handleNotificationClick = (notification: any) => {
+    const repair = [...assignedRepairs, ...completedRepairs].find(r => r.id === notification.repairId);
+    if (repair) {
+      setRepairDetails(repair);
+      setDetailsOpen(true);
+      
+      // Mark notification as read
+      setNotifications(
+        notifications.map(n => 
+          n.id === notification.id ? { ...n, isNew: false } : n
+        )
+      );
+    }
   };
 
   const filteredAssignedRepairs = assignedRepairs.filter(repair => {
@@ -183,8 +267,10 @@ const FixerDashboard = () => {
         return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">In Progress</Badge>;
       case "waiting_for_parts":
         return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Waiting for Parts</Badge>;
+      case "waiting_client_approval":
+        return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Waiting for Approval</Badge>;
       case "completed":
-        return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Completed</Badge>;
+        return <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200">Completed</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -232,15 +318,16 @@ const FixerDashboard = () => {
                 <p className="text-xs text-muted-foreground">{t('fixer.completed')}</p>
               </div>
             </Card>
-            <Card className="border p-2 px-3 flex items-center space-x-2">
-              <div className="h-8 w-8 rounded-full bg-yellow-100 flex items-center justify-center">
-                <AlertTriangle className="h-4 w-4 text-yellow-600" />
+            <Card className="border p-2 px-3 flex items-center space-x-2 relative">
+              <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
+                <Bell className="h-4 w-4 text-purple-600" />
               </div>
+              {notifications.some(n => n.isNew) && (
+                <div className="absolute top-1 right-1 h-2 w-2 rounded-full bg-blue-500"></div>
+              )}
               <div>
-                <p className="text-sm font-medium">
-                  {assignedRepairs.filter(r => r.status === "waiting_for_parts").length}
-                </p>
-                <p className="text-xs text-muted-foreground">{t('fixer.waiting')}</p>
+                <p className="text-sm font-medium">{notifications.length}</p>
+                <p className="text-xs text-muted-foreground">Notifications</p>
               </div>
             </Card>
           </div>
@@ -250,7 +337,15 @@ const FixerDashboard = () => {
           <TabsList>
             <TabsTrigger value="assigned">{t('fixer.assigned.repairs')}</TabsTrigger>
             <TabsTrigger value="completed">{t('fixer.completed.repairs')}</TabsTrigger>
+            <TabsTrigger value="notifications" className="relative">
+              Notifications
+              {notifications.some(n => n.isNew) && (
+                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-blue-500"></span>
+              )}
+            </TabsTrigger>
           </TabsList>
+
+          {/* Assigned Repairs Tab */}
           <TabsContent value="assigned" className="space-y-4">
             {filteredAssignedRepairs.length > 0 ? (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -295,6 +390,7 @@ const FixerDashboard = () => {
                       >
                         {t('fixer.view.details')}
                       </Button>
+                      
                       {repair.status === "assigned" ? (
                         <Button 
                           size="sm" 
@@ -303,13 +399,27 @@ const FixerDashboard = () => {
                           <DollarSign className="mr-1 h-4 w-4" />
                           {t('fixer.set.price')}
                         </Button>
-                      ) : (
+                      ) : repair.status === "in_progress" ? (
                         <Button 
                           size="sm" 
-                          onClick={() => handleMarkComplete(repair.id)}
+                          onClick={() => handleCompleteRepair(repair)}
                         >
                           <CheckCircle2 className="mr-1 h-4 w-4" />
                           {t('fixer.mark.complete')}
+                        </Button>
+                      ) : repair.status === "waiting_client_approval" ? (
+                        <Button size="sm" variant="outline" disabled>
+                          <Clock className="mr-1 h-4 w-4" />
+                          Awaiting Response
+                        </Button>
+                      ) : (
+                        <Button 
+                          size="sm" 
+                          variant={repair.status === "waiting_for_parts" ? "outline" : "default"}
+                          onClick={() => handleViewDetails(repair)}
+                        >
+                          <Wrench className="mr-1 h-4 w-4" />
+                          {t('fixer.view.details')}
                         </Button>
                       )}
                     </CardFooter>
@@ -330,6 +440,8 @@ const FixerDashboard = () => {
               </Card>
             )}
           </TabsContent>
+
+          {/* Completed Repairs Tab */}
           <TabsContent value="completed" className="space-y-4">
             {filteredCompletedRepairs.length > 0 ? (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -389,6 +501,33 @@ const FixerDashboard = () => {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          {/* Notifications Tab */}
+          <TabsContent value="notifications">
+            <div className="space-y-4">
+              {notifications.length > 0 ? (
+                notifications.map((notification) => (
+                  <NotificationItem
+                    key={notification.id}
+                    id={notification.id}
+                    type={notification.type}
+                    title={notification.title}
+                    message={notification.message}
+                    time={notification.time}
+                    isNew={notification.isNew}
+                    onClick={() => handleNotificationClick(notification)}
+                  />
+                ))
+              ) : (
+                <Card>
+                  <CardContent className="py-8 text-center">
+                    <Bell className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                    <p className="text-gray-500">No notifications yet.</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </div>
@@ -471,6 +610,7 @@ const FixerDashboard = () => {
                 min="0"
                 step="0.01"
               />
+              <p className="text-sm text-muted-foreground">Once set, this price cannot be changed later.</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="estimatedCompletion">{t('fixer.estimated.completion.date')}</Label>
@@ -497,6 +637,41 @@ const FixerDashboard = () => {
             </Button>
             <Button onClick={handlePriceSubmit} disabled={!priceForm.price || !priceForm.estimatedCompletion}>
               {t('fixer.confirm.price')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Mark as Complete Dialog */}
+      <Dialog open={completeDialogOpen} onOpenChange={setCompleteDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Mark Repair as Complete</DialogTitle>
+            <DialogDescription>
+              {repairDetails?.id} - {repairDetails?.deviceType}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="completeNotes">Completion Notes</Label>
+              <Textarea
+                id="completeNotes"
+                value={completeForm.notes}
+                onChange={(e) => setCompleteForm({ ...completeForm, notes: e.target.value })}
+                placeholder="Describe what was fixed and how"
+                className="mt-2"
+              />
+              <p className="text-sm text-muted-foreground mt-2">
+                Once marked as complete, this repair will be finalized and moved to completed repairs.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCompleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCompleteSubmit}>
+              Confirm Completion
             </Button>
           </DialogFooter>
         </DialogContent>

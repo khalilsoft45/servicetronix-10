@@ -7,508 +7,766 @@ import { Link } from "react-router-dom";
 import { useLanguage } from "@/context/LanguageContext";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useToast } from "@/components/ui/use-toast";
-import { Search, Clock, CheckCircle2, AlertTriangle, Truck, MapPin, Phone as PhoneIcon, Info, PhoneCall } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Search, CheckCircle, MapPin, Phone, Clock, ArrowRight, Calendar, UserCircle, Bell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import NotificationItem, { NotificationType } from "@/components/dashboard/NotificationItem";
 
-// Sample data for pickup requests
-const pickupRequestsData = [
+// Types
+type AssignmentStatus = 
+  | "pending_pickup" 
+  | "on_the_way_pickup" 
+  | "picked_up" 
+  | "delivered_to_repair" 
+  | "pending_delivery" 
+  | "on_the_way_delivery" 
+  | "delivered_to_client" 
+  | "completed";
+
+interface Assignment {
+  id: string;
+  repairId: string;
+  clientName: string;
+  clientPhone: string;
+  clientAddress: string;
+  deviceType: string;
+  deviceModel: string;
+  status: AssignmentStatus;
+  dateAssigned: string;
+  timeWindow?: string;
+  notes?: string;
+  isDelivery: boolean;
+}
+
+// Sample data
+const sampleAssignments: Assignment[] = [
   {
-    id: "REQ-001",
+    id: "ASSIGN-001",
+    repairId: "REP-003",
+    clientName: "Michael Wilson",
+    clientPhone: "+1 555-222-3333",
+    clientAddress: "123 Main St, Apt 4B, New York, NY 10001",
+    deviceType: "Phone",
+    deviceModel: "Samsung Galaxy S21",
+    status: "pending_pickup",
+    dateAssigned: "2023-06-20",
+    timeWindow: "10:00 AM - 2:00 PM",
+    notes: "Client will be home all day. The building has a doorman.",
+    isDelivery: false
+  },
+  {
+    id: "ASSIGN-002",
+    repairId: "REP-006",
+    clientName: "Sarah Davis",
+    clientPhone: "+1 555-666-9999",
+    clientAddress: "456 Park Ave, Brooklyn, NY 11201",
+    deviceType: "Phone",
+    deviceModel: "Google Pixel 6",
+    status: "pending_delivery",
+    dateAssigned: "2023-06-25",
+    timeWindow: "1:00 PM - 5:00 PM",
+    notes: "Please call 10 minutes before arrival. The device has been repaired and ready for delivery.",
+    isDelivery: true
+  },
+  {
+    id: "ASSIGN-003",
+    repairId: "REP-001",
     clientName: "John Doe",
-    clientPhone: "+1 (555) 123-4567",
-    deviceType: "MacBook Pro 2019",
-    issue: "Screen not working properly",
-    pickupDate: "2023-06-24",
-    address: "123 Main St, Apartment 4B, New York, NY 10001",
-    status: "scheduled",
-    notes: "Client will be available between 10 AM and 2 PM",
+    clientPhone: "+1 555-123-4567",
+    clientAddress: "789 Broadway, Manhattan, NY 10003",
+    deviceType: "Laptop",
+    deviceModel: "MacBook Pro 2019",
+    status: "delivered_to_repair",
+    dateAssigned: "2023-06-15",
+    isDelivery: false
   },
   {
-    id: "REQ-002",
-    clientName: "Sarah Williams",
-    clientPhone: "+1 (555) 987-6543",
-    deviceType: "iPhone 12",
-    issue: "Battery drains quickly",
-    pickupDate: "2023-06-23",
-    address: "456 Elm Avenue, Chicago, IL 60007",
-    status: "scheduled",
-    notes: "Apartment building with security desk. Notify client when arriving.",
-  },
-  {
-    id: "REQ-003",
-    clientName: "Michael Brown",
-    clientPhone: "+1 (555) 444-5555",
-    deviceType: "HP Laptop",
-    issue: "Keyboard not working properly",
-    pickupDate: "2023-06-23",
-    address: "321 Pine Road, Seattle, WA 98101",
-    status: "in_transit",
-    notes: "Client has been notified, currently on the way to pickup",
-  },
+    id: "ASSIGN-004",
+    repairId: "REP-002",
+    clientName: "Jane Smith",
+    clientPhone: "+1 555-987-6543",
+    clientAddress: "321 5th Ave, Queens, NY 11106",
+    deviceType: "Phone",
+    deviceModel: "iPhone 12",
+    status: "delivered_to_client",
+    dateAssigned: "2023-06-10",
+    isDelivery: true
+  }
 ];
 
-// Sample data for collected devices
-const collectedDevicesData = [
+// Sample notifications
+const sampleNotifications = [
   {
-    id: "REQ-005",
-    clientName: "Emily Davis",
-    clientPhone: "+1 (555) 666-7777",
-    deviceType: "iPad Pro 2021",
-    issue: "Cracked screen",
-    pickupDate: "2023-06-18",
-    collectionDate: "2023-06-18",
-    address: "654 Maple Drive, Austin, TX 78701",
-    status: "collected",
-    assignedFixer: "Robert Parker",
-    notes: "Device has original packaging and charger included",
+    id: "NOTIF-001",
+    type: "info" as NotificationType,
+    title: "New Pickup Assignment",
+    message: "You have been assigned to pick up a Samsung Galaxy S21 from Michael Wilson.",
+    time: "2 hours ago",
+    isNew: true,
+    assignmentId: "ASSIGN-001"
   },
   {
-    id: "REQ-006",
-    clientName: "Jessica Taylor",
-    clientPhone: "+1 (555) 888-9999",
-    deviceType: "Dell XPS Desktop",
-    issue: "Computer randomly shuts down",
-    pickupDate: "2023-06-17",
-    collectionDate: "2023-06-17",
-    address: "987 Cedar Street, Denver, CO 80201",
-    status: "collected",
-    assignedFixer: "David Johnson",
-    notes: "Very heavy computer, required dolly for transport",
+    id: "NOTIF-002",
+    type: "info" as NotificationType,
+    title: "New Delivery Assignment",
+    message: "You have been assigned to deliver a repaired Google Pixel 6 to Sarah Davis.",
+    time: "5 hours ago",
+    isNew: true,
+    assignmentId: "ASSIGN-002"
   },
+  {
+    id: "NOTIF-003",
+    type: "success" as NotificationType,
+    title: "Assignment Completed",
+    message: "Your delivery of the iPhone 12 has been marked as completed.",
+    time: "2 days ago",
+    isNew: false,
+    assignmentId: "ASSIGN-004"
+  }
 ];
 
 const CollectorDashboard = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
-  const [pickupRequests, setPickupRequests] = useState(pickupRequestsData);
-  const [collectedDevices, setCollectedDevices] = useState(collectedDevicesData);
+  const [assignments, setAssignments] = useState<Assignment[]>(sampleAssignments);
+  const [notifications, setNotifications] = useState(sampleNotifications);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const [currentItem, setCurrentItem] = useState<any>(null);
-  const [confirmationOpen, setConfirmationOpen] = useState(false);
-  const [confirmationNotes, setConfirmationNotes] = useState("");
+  const [updateStatusDialogOpen, setUpdateStatusDialogOpen] = useState(false);
+  const [updateForm, setUpdateForm] = useState({
+    notes: "",
+    newStatus: "" as AssignmentStatus | "",
+  });
+
+  const activeAssignments = assignments.filter(a => 
+    !["delivered_to_client", "completed"].includes(a.status)
+  );
+  
+  const completedAssignments = assignments.filter(a => 
+    ["delivered_to_client", "completed"].includes(a.status)
+  );
+
+  const pickupAssignments = activeAssignments.filter(a => !a.isDelivery);
+  const deliveryAssignments = activeAssignments.filter(a => a.isDelivery);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
 
-  const handleViewDetails = (item: any) => {
-    setCurrentItem(item);
+  const handleViewDetails = (assignment: Assignment) => {
+    setSelectedAssignment(assignment);
     setDetailsOpen(true);
   };
 
-  const handleMarkInTransit = (requestId: string) => {
-    const updatedRequests = pickupRequests.map(req => {
-      if (req.id === requestId) {
-        return { ...req, status: "in_transit" };
+  const handleUpdateStatus = (assignment: Assignment) => {
+    setSelectedAssignment(assignment);
+    setUpdateForm({
+      notes: "",
+      newStatus: getNextStatus(assignment.status),
+    });
+    setUpdateStatusDialogOpen(true);
+  };
+
+  const getNextStatus = (currentStatus: AssignmentStatus): AssignmentStatus => {
+    switch (currentStatus) {
+      case "pending_pickup":
+        return "on_the_way_pickup";
+      case "on_the_way_pickup":
+        return "picked_up";
+      case "picked_up":
+        return "delivered_to_repair";
+      case "pending_delivery":
+        return "on_the_way_delivery";
+      case "on_the_way_delivery":
+        return "delivered_to_client";
+      default:
+        return currentStatus;
+    }
+  };
+
+  const getStatusLabel = (status: AssignmentStatus): string => {
+    switch (status) {
+      case "pending_pickup":
+        return "Pending Pickup";
+      case "on_the_way_pickup":
+        return "On the Way to Pickup";
+      case "picked_up":
+        return "Picked Up";
+      case "delivered_to_repair":
+        return "Delivered to Repair Center";
+      case "pending_delivery":
+        return "Pending Delivery";
+      case "on_the_way_delivery":
+        return "On the Way to Deliver";
+      case "delivered_to_client":
+        return "Delivered to Client";
+      case "completed":
+        return "Completed";
+      default:
+        return "Unknown";
+    }
+  };
+
+  const getStatusColor = (status: AssignmentStatus): string => {
+    switch (status) {
+      case "pending_pickup":
+        return "bg-yellow-100 text-yellow-800";
+      case "on_the_way_pickup":
+        return "bg-blue-100 text-blue-800";
+      case "picked_up":
+        return "bg-green-100 text-green-800";
+      case "delivered_to_repair":
+        return "bg-indigo-100 text-indigo-800";
+      case "pending_delivery":
+        return "bg-purple-100 text-purple-800";
+      case "on_the_way_delivery":
+        return "bg-blue-100 text-blue-800";
+      case "delivered_to_client":
+        return "bg-green-100 text-green-800";
+      case "completed":
+        return "bg-gray-100 text-gray-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const handleUpdateSubmit = () => {
+    if (!selectedAssignment || !updateForm.newStatus) return;
+
+    const updatedAssignments = assignments.map(assignment => {
+      if (assignment.id === selectedAssignment.id) {
+        return {
+          ...assignment,
+          status: updateForm.newStatus,
+          notes: updateForm.notes 
+            ? (assignment.notes ? `${assignment.notes}\n${updateForm.notes}` : updateForm.notes)
+            : assignment.notes
+        };
       }
-      return req;
+      return assignment;
     });
 
-    setPickupRequests(updatedRequests);
+    setAssignments(updatedAssignments);
+    setUpdateStatusDialogOpen(false);
     toast({
       title: "Status updated",
-      description: `Request ${requestId} marked as in transit`,
+      description: `Assignment status updated to ${getStatusLabel(updateForm.newStatus)}.`
     });
   };
 
-  const handleConfirmCollection = (requestId: string) => {
-    const request = pickupRequests.find(req => req.id === requestId);
-    if (!request) return;
-
-    setCurrentItem(request);
-    setConfirmationNotes("");
-    setConfirmationOpen(true);
-  };
-
-  const handleCompleteCollection = () => {
-    if (!currentItem) return;
-
-    // Move from pickup requests to collected devices
-    const updatedRequests = pickupRequests.filter(req => req.id !== currentItem.id);
-    
-    const collectedDevice = {
-      ...currentItem,
-      status: "collected",
-      collectionDate: new Date().toISOString().split('T')[0],
-      notes: confirmationNotes || currentItem.notes,
-    };
-
-    setPickupRequests(updatedRequests);
-    setCollectedDevices([collectedDevice, ...collectedDevices]);
-    setConfirmationOpen(false);
-
-    toast({
-      title: "Collection confirmed",
-      description: `Device ${currentItem.id} has been collected successfully`,
-    });
-  };
-
-  // Filter data based on search query
-  const filteredPickupRequests = pickupRequests.filter(req => {
-    return (
-      req.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      req.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      req.deviceType.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      req.address.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  });
-
-  const filteredCollectedDevices = collectedDevices.filter(device => {
-    return (
-      device.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      device.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      device.deviceType.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      device.address.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  });
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "scheduled":
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Scheduled</Badge>;
-      case "in_transit":
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">In Transit</Badge>;
-      case "collected":
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Collected</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
+  const handleNotificationClick = (notification: any) => {
+    const assignment = assignments.find(a => a.id === notification.assignmentId);
+    if (assignment) {
+      setSelectedAssignment(assignment);
+      setDetailsOpen(true);
+      
+      // Mark notification as read
+      setNotifications(
+        notifications.map(n => 
+          n.id === notification.id ? { ...n, isNew: false } : n
+        )
+      );
     }
+  };
+
+  // Filter assignments based on search query
+  const filteredPickups = pickupAssignments.filter(assignment => {
+    return searchQuery === "" ||
+      assignment.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      assignment.deviceModel.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      assignment.repairId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      assignment.id.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  const filteredDeliveries = deliveryAssignments.filter(assignment => {
+    return searchQuery === "" ||
+      assignment.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      assignment.deviceModel.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      assignment.repairId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      assignment.id.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  const filteredCompleted = completedAssignments.filter(assignment => {
+    return searchQuery === "" ||
+      assignment.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      assignment.deviceModel.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      assignment.repairId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      assignment.id.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  const getStatusBadge = (status: AssignmentStatus) => {
+    return <Badge className={getStatusColor(status)}>{getStatusLabel(status)}</Badge>;
+  };
+
+  const getButtonLabel = (status: AssignmentStatus): string => {
+    switch (status) {
+      case "pending_pickup":
+        return "Start Pickup";
+      case "on_the_way_pickup":
+        return "Mark as Picked Up";
+      case "picked_up":
+        return "Mark as Delivered to Shop";
+      case "pending_delivery":
+        return "Start Delivery";
+      case "on_the_way_delivery":
+        return "Mark as Delivered";
+      default:
+        return "Update Status";
+    }
+  };
+
+  const canUpdateStatus = (status: AssignmentStatus): boolean => {
+    return ![
+      "delivered_to_repair", 
+      "delivered_to_client", 
+      "completed"
+    ].includes(status);
   };
 
   return (
     <div className="flex min-h-screen flex-col">
       <div className="flex-1 space-y-4 p-8 pt-6">
         <div className="flex items-center justify-between space-y-2">
-          <h2 className="text-3xl font-bold tracking-tight">{t('collector.dashboard')}</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Collector Dashboard</h2>
           <div className="flex items-center space-x-2">
             <LanguageSwitcher />
             <Link to="/">
-              <Button>{t('app.back.home')}</Button>
+              <Button>Back to Home</Button>
             </Link>
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <div className="relative w-full sm:w-64">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Pickups</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center">
+                <div className="text-2xl font-bold">{pickupAssignments.length}</div>
+                <div className="ml-auto bg-blue-100 p-2 rounded-full">
+                  <ArrowRight className="h-5 w-5 text-blue-700" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Deliveries</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center">
+                <div className="text-2xl font-bold">{deliveryAssignments.length}</div>
+                <div className="ml-auto bg-purple-100 p-2 rounded-full">
+                  <ArrowRight className="h-5 w-5 transform rotate-180 text-purple-700" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center">
+                <div className="text-2xl font-bold">{completedAssignments.length}</div>
+                <div className="ml-auto bg-green-100 p-2 rounded-full">
+                  <CheckCircle className="h-5 w-5 text-green-700" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+          <div className="relative w-full md:w-64">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
-              placeholder={t('collector.search.pickups')}
+              placeholder="Search assignments..."
               className="pl-9"
               value={searchQuery}
               onChange={handleSearchChange}
             />
           </div>
-          <div className="flex space-x-2">
-            <Card className="border p-2 px-3 flex items-center space-x-2">
-              <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-                <Clock className="h-4 w-4 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">{pickupRequests.filter(r => r.status === "scheduled").length}</p>
-                <p className="text-xs text-muted-foreground">{t('collector.scheduled')}</p>
-              </div>
-            </Card>
-            <Card className="border p-2 px-3 flex items-center space-x-2">
-              <div className="h-8 w-8 rounded-full bg-yellow-100 flex items-center justify-center">
-                <Truck className="h-4 w-4 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">{pickupRequests.filter(r => r.status === "in_transit").length}</p>
-                <p className="text-xs text-muted-foreground">{t('collector.in.transit')}</p>
-              </div>
-            </Card>
-            <Card className="border p-2 px-3 flex items-center space-x-2">
-              <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">{collectedDevices.length}</p>
-                <p className="text-xs text-muted-foreground">{t('collector.collected')}</p>
-              </div>
-            </Card>
-          </div>
         </div>
 
-        <Tabs defaultValue="pickup" className="space-y-4">
+        <Tabs defaultValue="pickups" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="pickup">{t('collector.pickup.requests')}</TabsTrigger>
-            <TabsTrigger value="collected">{t('collector.collected.devices')}</TabsTrigger>
+            <TabsTrigger value="pickups">Pickups</TabsTrigger>
+            <TabsTrigger value="deliveries">Deliveries</TabsTrigger>
+            <TabsTrigger value="completed">Completed</TabsTrigger>
+            <TabsTrigger value="notifications" className="relative">
+              Notifications
+              {notifications.some(n => n.isNew) && (
+                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-blue-500"></span>
+              )}
+            </TabsTrigger>
           </TabsList>
-          <TabsContent value="pickup" className="space-y-4">
-            {filteredPickupRequests.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {filteredPickupRequests.map((request) => (
-                  <Card key={request.id} className="overflow-hidden">
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="text-lg">{request.deviceType}</CardTitle>
-                          <CardDescription>{request.clientName}</CardDescription>
-                        </div>
-                        {getStatusBadge(request.status)}
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">{t('collector.pickup.id')}:</span>
-                          <span className="font-medium">{request.id}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">{t('collector.pickup.date')}:</span>
-                          <span>{request.pickupDate}</span>
-                        </div>
-                        <div className="flex items-center text-sm">
-                          <PhoneIcon className="h-3 w-3 mr-1 text-muted-foreground" />
-                          <span className="text-sm truncate">{request.clientPhone}</span>
-                        </div>
-                        <div className="flex items-start text-sm mt-1">
-                          <MapPin className="h-3 w-3 mr-1 text-muted-foreground mt-1" />
-                          <span className="text-sm line-clamp-2">{request.address}</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                    <CardFooter className="flex justify-between pt-0">
-                      <div className="flex gap-1">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => handleViewDetails(request)}
-                        >
-                          <Info className="h-4 w-4 mr-1" />
-                          {t('collector.details')}
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => window.open(`tel:${request.clientPhone.replace(/\D/g, '')}`)}
-                        >
-                          <PhoneCall className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      {request.status === "scheduled" ? (
-                        <Button 
-                          size="sm" 
-                          onClick={() => handleMarkInTransit(request.id)}
-                        >
-                          <Truck className="mr-1 h-4 w-4" />
-                          {t('collector.start.transit')}
-                        </Button>
-                      ) : (
-                        <Button 
-                          size="sm" 
-                          onClick={() => handleConfirmCollection(request.id)}
-                        >
-                          <CheckCircle2 className="mr-1 h-4 w-4" />
-                          {t('collector.confirm.pickup')}
-                        </Button>
-                      )}
-                    </CardFooter>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <Card>
-                <CardContent className="pt-6 pb-6 text-center">
-                  <div className="mx-auto w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mb-3">
-                    <Truck className="h-6 w-6 text-blue-500" />
-                  </div>
-                  <h3 className="text-lg font-medium">{t('collector.no.pickup.requests')}</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {t('collector.no.pickup.description')}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-          <TabsContent value="collected" className="space-y-4">
-            {filteredCollectedDevices.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {filteredCollectedDevices.map((device) => (
-                  <Card key={device.id}>
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="text-lg">{device.deviceType}</CardTitle>
-                          <CardDescription>{device.clientName}</CardDescription>
-                        </div>
-                        {getStatusBadge(device.status)}
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">{t('collector.request.id')}:</span>
-                          <span className="font-medium">{device.id}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">{t('collector.collection.date')}:</span>
-                          <span>{device.collectionDate}</span>
-                        </div>
-                        {device.assignedFixer && (
-                          <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">{t('collector.assigned.to')}:</span>
-                            <span>{device.assignedFixer}</span>
+          
+          <TabsContent value="pickups">
+            <div className="grid gap-4">
+              {filteredPickups.length > 0 ? (
+                filteredPickups.map((assignment) => (
+                  <Card key={assignment.id} className="overflow-hidden">
+                    <CardContent className="p-0">
+                      <div className="flex flex-col md:flex-row">
+                        <div className="p-4 md:p-6 flex-1">
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-4">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-semibold">Assignment #{assignment.id}</h3>
+                                {getStatusBadge(assignment.status)}
+                              </div>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Repair ID: {assignment.repairId} • Assigned: {assignment.dateAssigned}
+                              </p>
+                            </div>
                           </div>
-                        )}
-                        <div className="flex items-start text-sm mt-1">
-                          <MapPin className="h-3 w-3 mr-1 text-muted-foreground mt-1" />
-                          <span className="text-sm line-clamp-2">{device.address}</span>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <UserCircle className="h-4 w-4 text-muted-foreground" />
+                                <p className="text-sm font-medium">{assignment.clientName}</p>
+                              </div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <Phone className="h-4 w-4 text-muted-foreground" />
+                                <p className="text-sm">{assignment.clientPhone}</p>
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <MapPin className="h-4 w-4 text-muted-foreground mt-1" />
+                                <p className="text-sm">{assignment.clientAddress}</p>
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <p className="text-sm mb-2">
+                                <span className="font-medium">Device:</span> {assignment.deviceType} - {assignment.deviceModel}
+                              </p>
+                              
+                              {assignment.timeWindow && (
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Clock className="h-4 w-4 text-muted-foreground" />
+                                  <p className="text-sm">{assignment.timeWindow}</p>
+                                </div>
+                              )}
+                              
+                              {assignment.notes && (
+                                <p className="text-sm line-clamp-2">
+                                  <span className="font-medium">Notes:</span> {assignment.notes}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="bg-gray-50 p-4 md:p-6 flex flex-col justify-center gap-4 md:min-w-[200px]">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleViewDetails(assignment)}
+                          >
+                            View Details
+                          </Button>
+                          
+                          {canUpdateStatus(assignment.status) && (
+                            <Button 
+                              size="sm"
+                              onClick={() => handleUpdateStatus(assignment)}
+                            >
+                              {getButtonLabel(assignment.status)}
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </CardContent>
-                    <CardFooter className="flex justify-center pt-0">
+                  </Card>
+                ))
+              ) : (
+                <Card className="p-8 text-center">
+                  <CardDescription>No pickup assignments found</CardDescription>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="deliveries">
+            <div className="grid gap-4">
+              {filteredDeliveries.length > 0 ? (
+                filteredDeliveries.map((assignment) => (
+                  <Card key={assignment.id} className="overflow-hidden">
+                    <CardContent className="p-0">
+                      <div className="flex flex-col md:flex-row">
+                        <div className="p-4 md:p-6 flex-1">
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-4">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-semibold">Assignment #{assignment.id}</h3>
+                                {getStatusBadge(assignment.status)}
+                              </div>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Repair ID: {assignment.repairId} • Assigned: {assignment.dateAssigned}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <UserCircle className="h-4 w-4 text-muted-foreground" />
+                                <p className="text-sm font-medium">{assignment.clientName}</p>
+                              </div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <Phone className="h-4 w-4 text-muted-foreground" />
+                                <p className="text-sm">{assignment.clientPhone}</p>
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <MapPin className="h-4 w-4 text-muted-foreground mt-1" />
+                                <p className="text-sm">{assignment.clientAddress}</p>
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <p className="text-sm mb-2">
+                                <span className="font-medium">Device:</span> {assignment.deviceType} - {assignment.deviceModel}
+                              </p>
+                              
+                              {assignment.timeWindow && (
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Clock className="h-4 w-4 text-muted-foreground" />
+                                  <p className="text-sm">{assignment.timeWindow}</p>
+                                </div>
+                              )}
+                              
+                              {assignment.notes && (
+                                <p className="text-sm line-clamp-2">
+                                  <span className="font-medium">Notes:</span> {assignment.notes}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="bg-gray-50 p-4 md:p-6 flex flex-col justify-center gap-4 md:min-w-[200px]">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleViewDetails(assignment)}
+                          >
+                            View Details
+                          </Button>
+                          
+                          {canUpdateStatus(assignment.status) && (
+                            <Button 
+                              size="sm"
+                              onClick={() => handleUpdateStatus(assignment)}
+                            >
+                              {getButtonLabel(assignment.status)}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <Card className="p-8 text-center">
+                  <CardDescription>No delivery assignments found</CardDescription>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="completed">
+            <div className="grid gap-4">
+              {filteredCompleted.length > 0 ? (
+                filteredCompleted.map((assignment) => (
+                  <Card key={assignment.id}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-base">Assignment #{assignment.id}</CardTitle>
+                          <CardDescription>Repair ID: {assignment.repairId}</CardDescription>
+                        </div>
+                        {getStatusBadge(assignment.status)}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm mb-1 font-medium">{assignment.clientName}</p>
+                          <p className="text-sm">{assignment.deviceType} - {assignment.deviceModel}</p>
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <p className="text-sm">Assigned: {assignment.dateAssigned}</p>
+                          </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <p className="text-sm line-clamp-1">{assignment.clientAddress}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                    <CardFooter className="pt-0">
                       <Button 
                         variant="outline" 
-                        size="sm" 
-                        onClick={() => handleViewDetails(device)}
+                        size="sm"
+                        onClick={() => handleViewDetails(assignment)}
+                        className="w-full"
                       >
-                        <Info className="h-4 w-4 mr-1" />
-                        {t('collector.view.details')}
+                        View Details
                       </Button>
                     </CardFooter>
                   </Card>
-                ))}
-              </div>
-            ) : (
-              <Card>
-                <CardContent className="pt-6 pb-6 text-center">
-                  <div className="mx-auto w-12 h-12 rounded-full bg-green-50 flex items-center justify-center mb-3">
-                    <CheckCircle2 className="h-6 w-6 text-green-500" />
-                  </div>
-                  <h3 className="text-lg font-medium">{t('collector.no.collected.devices')}</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {t('collector.no.collected.description')}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
+                ))
+              ) : (
+                <Card className="p-8 text-center">
+                  <CardDescription>No completed assignments found</CardDescription>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="notifications">
+            <div className="space-y-4">
+              {notifications.length > 0 ? (
+                notifications.map((notification) => (
+                  <NotificationItem
+                    key={notification.id}
+                    id={notification.id}
+                    type={notification.type}
+                    title={notification.title}
+                    message={notification.message}
+                    time={notification.time}
+                    isNew={notification.isNew}
+                    onClick={() => handleNotificationClick(notification)}
+                  />
+                ))
+              ) : (
+                <Card>
+                  <CardContent className="py-8 text-center">
+                    <Bell className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                    <p className="text-gray-500">No notifications yet.</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </div>
 
-      {/* Details Dialog */}
+      {/* Assignment Details Dialog */}
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>{t('collector.item.details')}</DialogTitle>
+            <DialogTitle>Assignment Details</DialogTitle>
             <DialogDescription>
-              {currentItem?.id} - {currentItem?.deviceType}
+              {selectedAssignment?.id} - {selectedAssignment?.isDelivery ? "Delivery" : "Pickup"}
             </DialogDescription>
           </DialogHeader>
-          {currentItem && (
+          {selectedAssignment && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-sm font-medium">{t('collector.client')}:</p>
-                  <p>{currentItem.clientName}</p>
+                  <p className="text-sm text-muted-foreground">Repair ID</p>
+                  <p className="font-medium">{selectedAssignment.repairId}</p>
+                </div>
+                {getStatusBadge(selectedAssignment.status)}
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm text-muted-foreground">Client</Label>
+                  <p>{selectedAssignment.clientName}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium">{t('collector.status')}:</p>
-                  <p>{getStatusBadge(currentItem.status)}</p>
+                  <Label className="text-sm text-muted-foreground">Phone</Label>
+                  <p>{selectedAssignment.clientPhone}</p>
+                </div>
+                <div className="col-span-1 md:col-span-2">
+                  <Label className="text-sm text-muted-foreground">Address</Label>
+                  <p>{selectedAssignment.clientAddress}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium">{t('collector.phone')}:</p>
-                  <p>{currentItem.clientPhone}</p>
+                  <Label className="text-sm text-muted-foreground">Device</Label>
+                  <p>{selectedAssignment.deviceType} - {selectedAssignment.deviceModel}</p>
                 </div>
-                {currentItem.pickupDate && (
+                <div>
+                  <Label className="text-sm text-muted-foreground">Date Assigned</Label>
+                  <p>{selectedAssignment.dateAssigned}</p>
+                </div>
+                {selectedAssignment.timeWindow && (
                   <div>
-                    <p className="text-sm font-medium">{t('collector.pickup.date')}:</p>
-                    <p>{currentItem.pickupDate}</p>
-                  </div>
-                )}
-                {currentItem.collectionDate && (
-                  <div>
-                    <p className="text-sm font-medium">{t('collector.collected.date')}:</p>
-                    <p>{currentItem.collectionDate}</p>
-                  </div>
-                )}
-                {currentItem.assignedFixer && (
-                  <div>
-                    <p className="text-sm font-medium">{t('collector.assigned.fixer')}:</p>
-                    <p>{currentItem.assignedFixer}</p>
+                    <Label className="text-sm text-muted-foreground">Time Window</Label>
+                    <p>{selectedAssignment.timeWindow}</p>
                   </div>
                 )}
               </div>
-              <div>
-                <p className="text-sm font-medium mb-1">{t('collector.address')}:</p>
-                <p className="text-sm">{currentItem.address}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium mb-1">{t('collector.issue')}:</p>
-                <p className="text-sm">{currentItem.issue}</p>
-              </div>
-              {currentItem.notes && (
+              
+              {selectedAssignment.notes && (
                 <div>
-                  <p className="text-sm font-medium mb-1">{t('collector.notes')}:</p>
-                  <p className="text-sm">{currentItem.notes}</p>
+                  <Label className="text-sm text-muted-foreground">Notes</Label>
+                  <p className="text-sm mt-1 whitespace-pre-line">{selectedAssignment.notes}</p>
                 </div>
               )}
-              {currentItem.status !== "collected" && (
-                <div className="flex justify-between">
-                  <Button
-                    variant="outline"
-                    onClick={() => window.open(`tel:${currentItem.clientPhone.replace(/\D/g, '')}`)}
-                  >
-                    <PhoneCall className="mr-2 h-4 w-4" />
-                    {t('collector.call.client')}
+              
+              <div className="pt-4 flex justify-end gap-2">
+                {canUpdateStatus(selectedAssignment.status) && (
+                  <Button onClick={() => handleUpdateStatus(selectedAssignment)}>
+                    {getButtonLabel(selectedAssignment.status)}
                   </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(currentItem.address)}`, '_blank')}
-                  >
-                    <MapPin className="mr-2 h-4 w-4" />
-                    {t('collector.open.maps')}
-                  </Button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
 
-      {/* Confirmation Dialog */}
-      <Dialog open={confirmationOpen} onOpenChange={setConfirmationOpen}>
+      {/* Update Status Dialog */}
+      <Dialog open={updateStatusDialogOpen} onOpenChange={setUpdateStatusDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>{t('collector.confirm.collection')}</DialogTitle>
+            <DialogTitle>Update Assignment Status</DialogTitle>
             <DialogDescription>
-              {t('collector.confirm.description')}
+              Update the status of assignment #{selectedAssignment?.id}.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            {currentItem && (
-              <div className="space-y-2">
-                <div className="bg-blue-50 p-3 rounded-md">
-                  <p className="font-medium">{currentItem.deviceType}</p>
-                  <p className="text-sm">{currentItem.clientName} - {currentItem.id}</p>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">{t('collector.collection.notes')}:</p>
-                  <Textarea
-                    value={confirmationNotes}
-                    onChange={(e) => setConfirmationNotes(e.target.value)}
-                    placeholder={t('collector.notes.placeholder')}
-                  />
-                </div>
-              </div>
-            )}
+          <div className="space-y-4 py-4">
+            <div>
+              <Label className="text-sm font-medium">Current Status</Label>
+              <p className="text-sm mt-1">{selectedAssignment ? getStatusLabel(selectedAssignment.status) : ""}</p>
+            </div>
+            
+            <div>
+              <Label className="text-sm font-medium">New Status</Label>
+              <p className="text-sm mt-1 font-semibold">{updateForm.newStatus ? getStatusLabel(updateForm.newStatus) : ""}</p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes (Optional)</Label>
+              <Textarea
+                id="notes"
+                value={updateForm.notes}
+                onChange={(e) => setUpdateForm({...updateForm, notes: e.target.value})}
+                placeholder="Add any notes about this status update"
+              />
+            </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setConfirmationOpen(false)}
-            >
-              {t('collector.cancel')}
+            <Button variant="outline" onClick={() => setUpdateStatusDialogOpen(false)}>
+              Cancel
             </Button>
-            <Button
-              onClick={handleCompleteCollection}
+            <Button 
+              onClick={handleUpdateSubmit}
+              disabled={!updateForm.newStatus}
             >
-              {t('collector.confirm.collection')}
+              Update Status
             </Button>
           </DialogFooter>
         </DialogContent>

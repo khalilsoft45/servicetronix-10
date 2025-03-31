@@ -2,6 +2,7 @@
 import { useState } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import RepairStatusCard from "@/components/dashboard/RepairStatusCard";
+import NotificationItem, { NotificationType } from "@/components/dashboard/NotificationItem";
 import { Button } from "@/components/ui/button";
 import { 
   PlusCircle, 
@@ -9,7 +10,8 @@ import {
   Filter, 
   CheckCircle2,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  Bell
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { 
@@ -29,7 +31,8 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Sample data for demonstration
 const sampleRepairs = [
@@ -48,6 +51,7 @@ const sampleRepairs = [
     status: "completed" as const,
     dateCreated: "05 May 2023",
     lastUpdated: "10 May 2023",
+    price: 85,
   },
   {
     id: "REP-003",
@@ -65,11 +69,61 @@ const sampleRepairs = [
     dateCreated: "22 Jun 2023",
     lastUpdated: "22 Jun 2023",
   },
+  {
+    id: "REP-005",
+    device: "Dell XPS 13",
+    issue: "Keyboard not responding correctly",
+    status: "waiting_price_confirmation" as const,
+    dateCreated: "18 Jun 2023",
+    lastUpdated: "21 Jun 2023",
+    price: 120,
+  },
+  {
+    id: "REP-006",
+    device: "Google Pixel 6",
+    issue: "Camera not focusing properly",
+    status: "repair_in_progress" as const,
+    dateCreated: "15 Jun 2023",
+    lastUpdated: "23 Jun 2023",
+    price: 95,
+  },
+];
+
+// Sample notifications
+const sampleNotifications = [
+  {
+    id: "NOTIF-001",
+    type: "info" as NotificationType,
+    title: "Price Set for Your Repair",
+    message: "The technician has set a price of $120 for your Dell XPS repair. Please confirm if you accept.",
+    time: "2 hours ago",
+    isNew: true,
+    repairId: "REP-005"
+  },
+  {
+    id: "NOTIF-002",
+    type: "success" as NotificationType,
+    title: "Repair Completed",
+    message: "Your iPhone 12 has been successfully repaired and is ready for delivery.",
+    time: "1 day ago",
+    isNew: false,
+    repairId: "REP-002"
+  },
+  {
+    id: "NOTIF-003",
+    type: "alert" as NotificationType,
+    title: "Device Collection Scheduled",
+    message: "A collector will pick up your Samsung Galaxy S21 tomorrow between 10 AM and 2 PM.",
+    time: "3 days ago",
+    isNew: false,
+    repairId: "REP-003"
+  }
 ];
 
 const Dashboard = () => {
   const { toast } = useToast();
   const [repairs] = useState(sampleRepairs);
+  const [notifications] = useState(sampleNotifications);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [newRepairForm, setNewRepairForm] = useState({
@@ -79,6 +133,8 @@ const Dashboard = () => {
     additionalInfo: "",
   });
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [priceConfirmDialog, setPriceConfirmDialog] = useState(false);
+  const [selectedRepair, setSelectedRepair] = useState<any>(null);
 
   const handleRepairFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -106,6 +162,29 @@ const Dashboard = () => {
     }, 1000);
   };
 
+  const handleNotificationClick = (notification: any) => {
+    const repair = repairs.find(r => r.id === notification.repairId);
+    if (repair && repair.status === "waiting_price_confirmation") {
+      setSelectedRepair(repair);
+      setPriceConfirmDialog(true);
+    } else {
+      toast({
+        title: "Notification viewed",
+        description: `You viewed notification about ${notification.repairId}`,
+      });
+    }
+  };
+
+  const handlePriceConfirm = (accept: boolean) => {
+    toast({
+      title: accept ? "Price accepted" : "Price rejected",
+      description: accept 
+        ? "The technician will proceed with the repair." 
+        : "The device will be returned without repair.",
+    });
+    setPriceConfirmDialog(false);
+  };
+
   // Filter repairs based on search query and status filter
   const filteredRepairs = repairs.filter((repair) => {
     const matchesSearch = searchQuery === "" || 
@@ -120,8 +199,16 @@ const Dashboard = () => {
 
   // Calculate counts for the summary cards
   const completedCount = repairs.filter(r => r.status === "completed").length;
-  const inProgressCount = repairs.filter(r => ["in_repair", "awaiting_collection", "fixed_awaiting_delivery"].includes(r.status)).length;
-  const pendingCount = repairs.filter(r => r.status === "pending_confirmation").length;
+  const inProgressCount = repairs.filter(r => [
+    "in_repair", 
+    "awaiting_collection", 
+    "fixed_awaiting_delivery",
+    "repair_in_progress"
+  ].includes(r.status as any)).length;
+  const pendingCount = repairs.filter(r => [
+    "pending_confirmation",
+    "waiting_price_confirmation"
+  ].includes(r.status as any)).length;
 
   return (
     <DashboardLayout title="Dashboard">
@@ -196,7 +283,10 @@ const Dashboard = () => {
                 <SelectItem value="pending_confirmation">Pending Confirmation</SelectItem>
                 <SelectItem value="awaiting_collection">Awaiting Collection</SelectItem>
                 <SelectItem value="in_repair">In Repair</SelectItem>
+                <SelectItem value="waiting_price_confirmation">Waiting for Approval</SelectItem>
+                <SelectItem value="repair_in_progress">Repair in Progress</SelectItem>
                 <SelectItem value="fixed_awaiting_delivery">Fixed & Awaiting Delivery</SelectItem>
+                <SelectItem value="repair_rejected">Repair Rejected</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
               </SelectContent>
             </Select>
@@ -284,27 +374,114 @@ const Dashboard = () => {
           </Dialog>
         </div>
         
-        {/* Repairs List */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredRepairs.length > 0 ? (
-            filteredRepairs.map((repair) => (
-              <RepairStatusCard
-                key={repair.id}
-                id={repair.id}
-                device={repair.device}
-                issue={repair.issue}
-                status={repair.status}
-                dateCreated={repair.dateCreated}
-                lastUpdated={repair.lastUpdated}
-              />
-            ))
-          ) : (
-            <div className="col-span-full text-center py-8">
-              <p className="text-lg text-gray-500">No repairs found matching your filters.</p>
+        {/* Main Content */}
+        <Tabs defaultValue="repairs" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="repairs">My Repairs</TabsTrigger>
+            <TabsTrigger value="notifications" className="relative">
+              Notifications
+              {notifications.some(n => n.isNew) && (
+                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-blue-500"></span>
+              )}
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="repairs" className="space-y-4">
+            {/* Repairs List */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredRepairs.length > 0 ? (
+                filteredRepairs.map((repair) => (
+                  <RepairStatusCard
+                    key={repair.id}
+                    id={repair.id}
+                    device={repair.device}
+                    issue={repair.issue}
+                    status={repair.status}
+                    dateCreated={repair.dateCreated}
+                    lastUpdated={repair.lastUpdated}
+                    price={repair.price}
+                  />
+                ))
+              ) : (
+                <div className="col-span-full text-center py-8">
+                  <p className="text-lg text-gray-500">No repairs found matching your filters.</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="notifications">
+            <div className="space-y-4">
+              {notifications.length > 0 ? (
+                notifications.map((notification) => (
+                  <NotificationItem
+                    key={notification.id}
+                    id={notification.id}
+                    type={notification.type}
+                    title={notification.title}
+                    message={notification.message}
+                    time={notification.time}
+                    isNew={notification.isNew}
+                    onClick={() => handleNotificationClick(notification)}
+                  />
+                ))
+              ) : (
+                <Card>
+                  <CardContent className="py-8 text-center">
+                    <Bell className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                    <p className="text-gray-500">No notifications yet.</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+      
+      {/* Price Confirmation Dialog */}
+      <Dialog open={priceConfirmDialog} onOpenChange={setPriceConfirmDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Confirm Repair Price</DialogTitle>
+            <DialogDescription>
+              The technician has set a price for your repair. Do you want to proceed?
+            </DialogDescription>
+          </DialogHeader>
+          {selectedRepair && (
+            <div className="py-4">
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500">Device</h4>
+                  <p className="font-medium">{selectedRepair.device}</p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500">Issue</h4>
+                  <p>{selectedRepair.issue}</p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500">Repair Price</h4>
+                  <p className="text-xl font-bold text-green-700">${selectedRepair.price}</p>
+                </div>
+              </div>
             </div>
           )}
-        </div>
-      </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline" 
+              className="sm:flex-1" 
+              onClick={() => handlePriceConfirm(false)}
+            >
+              Reject
+            </Button>
+            <Button 
+              className="sm:flex-1" 
+              onClick={() => handlePriceConfirm(true)}
+            >
+              Accept
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };
