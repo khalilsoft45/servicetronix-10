@@ -6,33 +6,39 @@ import ActionBar from "@/components/dashboard/ActionBar";
 import NewRepairDialog from "@/components/dashboard/NewRepairDialog";
 import PriceConfirmationDialog from "@/components/dashboard/PriceConfirmationDialog";
 import DashboardTabs from "@/components/dashboard/DashboardTabs";
-import { useDashboardState } from "@/hooks/useDashboardState";
+import { useRepairSync } from "@/hooks/useRepairSync";
+import { useNotifications } from "@/context/NotificationContext";
+import { useRepairActions } from "@/hooks/useRepairActions";
+import { filterRepairsByStatus, filterRepairsBySearch, countRepairsByStatus } from "@/utils/dashboardUtils";
+import { useState } from "react";
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { repairs, isLoading } = useRepairSync();
+  const { notifications } = useNotifications();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [activeTab, setActiveTab] = useState("repairs");
+  
   const {
-    notifications,
-    searchQuery,
-    setSearchQuery,
-    statusFilter,
-    setStatusFilter,
     newRepairForm,
     dialogOpen,
     setDialogOpen,
     priceConfirmDialog,
     setPriceConfirmDialog,
     selectedRepair,
-    activeTab,
-    setActiveTab,
-    filteredRepairs,
-    completedCount,
-    inProgressCount,
-    pendingCount,
     handleRepairFormChange,
     handleRepairSubmit,
     handleNotificationClick,
     handlePriceConfirm
-  } = useDashboardState();
+  } = useRepairActions();
+
+  // Apply filters to get the list of repairs to display
+  const filteredByStatus = filterRepairsByStatus(repairs, statusFilter);
+  const filteredRepairs = filterRepairsBySearch(filteredByStatus, searchQuery);
+  
+  // Calculate counts for summary cards
+  const { completedCount, inProgressCount, pendingCount } = countRepairsByStatus(repairs);
 
   // Make sure we have data to pass to ProfileForms
   const userData = user ? {
@@ -44,7 +50,7 @@ const Dashboard = () => {
     <DashboardLayout title="Dashboard">
       <div className="grid gap-6">
         <SummaryCards 
-          totalRepairs={filteredRepairs.length} 
+          totalRepairs={repairs.length} 
           completedCount={completedCount} 
           pendingCount={pendingCount} 
           inProgressCount={inProgressCount}
@@ -58,14 +64,18 @@ const Dashboard = () => {
           onRequestRepairClick={() => setDialogOpen(true)}
         />
         
-        <DashboardTabs
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          filteredRepairs={filteredRepairs}
-          notifications={notifications}
-          onNotificationClick={handleNotificationClick}
-          userData={userData}
-        />
+        {isLoading ? (
+          <div className="text-center py-8">Loading dashboard data...</div>
+        ) : (
+          <DashboardTabs
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            filteredRepairs={filteredRepairs}
+            notifications={notifications}
+            onNotificationClick={handleNotificationClick}
+            userData={userData}
+          />
+        )}
       </div>
       
       <NewRepairDialog 

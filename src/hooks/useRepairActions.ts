@@ -3,9 +3,14 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Notification } from "@/components/dashboard/NotificationsList";
 import { NewRepairFormData } from "@/types/dashboard";
+import { useNotifications } from "@/context/NotificationContext";
+import { useRepairSync } from "@/hooks/useRepairSync";
 
 export const useRepairActions = () => {
   const { toast } = useToast();
+  const { addNotification } = useNotifications();
+  const { updateStatus, updatePrice } = useRepairSync();
+  
   const [newRepairForm, setNewRepairForm] = useState<NewRepairFormData>({
     deviceType: "",
     deviceModel: "",
@@ -32,6 +37,15 @@ export const useRepairActions = () => {
         title: "Repair request submitted!",
         description: "A phone operator will contact you soon to confirm the details.",
       });
+      
+      // Add a notification for operators
+      addNotification({
+        type: "info",
+        title: "New Repair Request",
+        message: `New ${newRepairForm.deviceType} repair request needs confirmation.`,
+        repairId: `REP-${Date.now().toString().substring(7)}`
+      });
+      
       setDialogOpen(false);
       setNewRepairForm({
         deviceType: "",
@@ -44,7 +58,6 @@ export const useRepairActions = () => {
 
   const handleNotificationClick = (notification: Notification) => {
     // Find the related repair in the repairs array
-    // This would normally be done via API but we're simulating for now
     if (notification.repairId === "REP-005") {
       setSelectedRepair({
         id: "REP-005",
@@ -64,12 +77,43 @@ export const useRepairActions = () => {
   };
 
   const handlePriceConfirm = (accept: boolean) => {
-    toast({
-      title: accept ? "Price accepted" : "Price rejected",
-      description: accept 
-        ? "The technician will proceed with the repair." 
-        : "The device will be returned without repair.",
-    });
+    if (selectedRepair) {
+      if (accept) {
+        updateStatus({ 
+          id: selectedRepair.id, 
+          status: "in_progress" 
+        });
+        
+        // Add notification for fixer
+        addNotification({
+          type: "success",
+          title: "Price Approved",
+          message: `The client has approved the price for repair ${selectedRepair.id}.`,
+          repairId: selectedRepair.id
+        });
+      } else {
+        updateStatus({ 
+          id: selectedRepair.id, 
+          status: "price_rejected" 
+        });
+        
+        // Add notification for fixer
+        addNotification({
+          type: "warning",
+          title: "Price Rejected",
+          message: `The client has rejected the price for repair ${selectedRepair.id}.`,
+          repairId: selectedRepair.id
+        });
+      }
+      
+      toast({
+        title: accept ? "Price accepted" : "Price rejected",
+        description: accept 
+          ? "The technician will proceed with the repair." 
+          : "The device will be returned without repair.",
+      });
+    }
+    
     setPriceConfirmDialog(false);
   };
 
