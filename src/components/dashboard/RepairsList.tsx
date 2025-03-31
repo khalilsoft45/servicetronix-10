@@ -1,8 +1,19 @@
 
 import RepairStatusCard from "@/components/dashboard/RepairStatusCard";
+import { RepairStatus } from "@/types/dashboard";
 
 interface RepairsListProps {
-  repairs: any[];
+  repairs: {
+    id: string;
+    device: string;
+    issue: string;
+    status: RepairStatus;
+    dateCreated: string;
+    lastUpdated: string;
+    price?: number;
+    fixerNotes?: string;
+    assignedFixer?: string;
+  }[];
   showEmptyMessage?: boolean;
 }
 

@@ -34,6 +34,12 @@ const Dashboard = () => {
     handlePriceConfirm
   } = useDashboardState();
 
+  // Make sure we have data to pass to ProfileForms
+  const userData = user ? {
+    name: user.name || "",
+    email: user.email || ""
+  } : null;
+
   return (
     <DashboardLayout title="Dashboard">
       <div className="grid gap-6">
@@ -41,6 +47,7 @@ const Dashboard = () => {
           totalRepairs={filteredRepairs.length} 
           completedCount={completedCount} 
           pendingCount={pendingCount} 
+          inProgressCount={inProgressCount}
         />
         
         <ActionBar 
@@ -57,7 +64,7 @@ const Dashboard = () => {
           filteredRepairs={filteredRepairs}
           notifications={notifications}
           onNotificationClick={handleNotificationClick}
-          userData={user}
+          userData={userData}
         />
       </div>
       
