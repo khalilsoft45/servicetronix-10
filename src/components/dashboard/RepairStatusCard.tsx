@@ -1,7 +1,6 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Clock, CheckCircle, Tool, Truck, Phone } from "lucide-react";
+import { ArrowRight, Clock, CheckCircle, Wrench, Truck, Phone } from "lucide-react";
 
 type RepairStatus = 
   | "pending_confirmation" 
@@ -47,7 +46,7 @@ const RepairStatusCard = ({
         return {
           label: "In Repair",
           color: "bg-purple-100 text-purple-800",
-          icon: Tool,
+          icon: Wrench,
           description: "Your device is currently being repaired by our technician.",
         };
       case "fixed_awaiting_delivery":
