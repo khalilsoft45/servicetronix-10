@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Clock, CheckCircle, Wrench, Truck, Phone, DollarSign, XCircle } from "lucide-react";
+import { ArrowRight, Clock, CheckCircle, Wrench, Truck, Phone, DollarSign, XCircle, User } from "lucide-react";
 
 export type RepairStatus = 
   | "pending_confirmation" 
@@ -11,6 +11,10 @@ export type RepairStatus =
   | "repair_in_progress"
   | "fixed_awaiting_delivery" 
   | "repair_rejected"
+  | "price_rejected"
+  | "price_confirmed_in_repair"
+  | "rejected"
+  | "confirmed_awaiting_collection"
   | "completed";
 
 interface RepairStatusCardProps {
@@ -21,6 +25,8 @@ interface RepairStatusCardProps {
   dateCreated: string;
   lastUpdated: string;
   price?: number;
+  fixerNotes?: string;
+  assignedFixer?: string;
 }
 
 const RepairStatusCard = ({
@@ -31,6 +37,8 @@ const RepairStatusCard = ({
   dateCreated,
   lastUpdated,
   price,
+  fixerNotes,
+  assignedFixer,
 }: RepairStatusCardProps) => {
   const getStatusInfo = (status: RepairStatus) => {
     switch (status) {
@@ -42,6 +50,7 @@ const RepairStatusCard = ({
           description: "Waiting for phone operator to call and confirm details.",
         };
       case "awaiting_collection":
+      case "confirmed_awaiting_collection":
         return {
           label: "Awaiting Collection",
           color: "bg-blue-100 text-blue-800",
@@ -62,6 +71,7 @@ const RepairStatusCard = ({
           icon: DollarSign,
           description: "Waiting for your approval of the repair price.",
         };
+      case "price_confirmed_in_repair":
       case "repair_in_progress":
         return {
           label: "Repair in Progress",
@@ -76,7 +86,9 @@ const RepairStatusCard = ({
           icon: Truck,
           description: "Your device has been fixed and will be delivered soon.",
         };
+      case "price_rejected":
       case "repair_rejected":
+      case "rejected":
         return {
           label: "Repair Rejected",
           color: "bg-red-100 text-red-800",
@@ -129,6 +141,23 @@ const RepairStatusCard = ({
             <div>
               <h4 className="font-medium text-sm text-gray-500">Repair Price</h4>
               <p className="font-medium">${price.toFixed(2)}</p>
+            </div>
+          )}
+          
+          {assignedFixer && (
+            <div>
+              <h4 className="font-medium text-sm text-gray-500">Assigned Technician</h4>
+              <div className="flex items-center space-x-2">
+                <User className="h-4 w-4 text-gray-400" />
+                <p>{assignedFixer}</p>
+              </div>
+            </div>
+          )}
+          
+          {fixerNotes && (
+            <div>
+              <h4 className="font-medium text-sm text-gray-500">Technician Notes</h4>
+              <p className="text-sm italic">{fixerNotes}</p>
             </div>
           )}
           

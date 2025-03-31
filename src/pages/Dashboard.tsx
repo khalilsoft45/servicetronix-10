@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import RepairStatusCard from "@/components/dashboard/RepairStatusCard";
 import NotificationItem, { NotificationType } from "@/components/dashboard/NotificationItem";
@@ -11,7 +12,12 @@ import {
   CheckCircle2,
   Clock,
   AlertTriangle,
-  Bell
+  Bell,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Lock
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { 
@@ -33,6 +39,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 
 // Sample data for demonstration
 const sampleRepairs = [
@@ -43,6 +53,7 @@ const sampleRepairs = [
     status: "in_repair" as const,
     dateCreated: "12 Jun 2023",
     lastUpdated: "15 Jun 2023",
+    assignedFixer: "John Smith",
   },
   {
     id: "REP-002",
@@ -52,6 +63,8 @@ const sampleRepairs = [
     dateCreated: "05 May 2023",
     lastUpdated: "10 May 2023",
     price: 85,
+    fixerNotes: "Replaced battery and cleaned internal components to improve heat dissipation",
+    assignedFixer: "Jane Doe",
   },
   {
     id: "REP-003",
@@ -77,6 +90,7 @@ const sampleRepairs = [
     dateCreated: "18 Jun 2023",
     lastUpdated: "21 Jun 2023",
     price: 120,
+    assignedFixer: "Mike Johnson",
   },
   {
     id: "REP-006",
@@ -86,6 +100,7 @@ const sampleRepairs = [
     dateCreated: "15 Jun 2023",
     lastUpdated: "23 Jun 2023",
     price: 95,
+    assignedFixer: "Sarah Williams",
   },
 ];
 
@@ -120,8 +135,41 @@ const sampleNotifications = [
   }
 ];
 
+// Profile form schema
+const profileFormSchema = z.object({
+  name: z.string().min(2, {
+    message: "Name must be at least 2 characters.",
+  }),
+  email: z.string().email({
+    message: "Please enter a valid email address.",
+  }),
+  phone: z.string().min(10, {
+    message: "Phone number must be at least 10 digits.",
+  }),
+  address: z.string().min(5, {
+    message: "Address must be at least 5 characters.",
+  }),
+});
+
+// Password change schema
+const passwordFormSchema = z.object({
+  currentPassword: z.string().min(6, {
+    message: "Password must be at least 6 characters.",
+  }),
+  newPassword: z.string().min(6, {
+    message: "New password must be at least 6 characters.",
+  }),
+  confirmPassword: z.string().min(6, {
+    message: "Confirm password must be at least 6 characters.",
+  }),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
 const Dashboard = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [repairs] = useState(sampleRepairs);
   const [notifications] = useState(sampleNotifications);
   const [searchQuery, setSearchQuery] = useState("");
@@ -135,6 +183,28 @@ const Dashboard = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [priceConfirmDialog, setPriceConfirmDialog] = useState(false);
   const [selectedRepair, setSelectedRepair] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState("repairs");
+
+  // Profile form
+  const profileForm = useForm<z.infer<typeof profileFormSchema>>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues: {
+      name: user?.name || "",
+      email: user?.email || "",
+      phone: "123-456-7890", // Default value for demo
+      address: "123 Main St, Anytown, USA", // Default value for demo
+    },
+  });
+
+  // Password form
+  const passwordForm = useForm<z.infer<typeof passwordFormSchema>>({
+    resolver: zodResolver(passwordFormSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
 
   const handleRepairFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -185,6 +255,26 @@ const Dashboard = () => {
     setPriceConfirmDialog(false);
   };
 
+  const onProfileSubmit = (values: z.infer<typeof profileFormSchema>) => {
+    toast({
+      title: "Profile updated",
+      description: "Your profile information has been updated successfully.",
+    });
+  };
+
+  const onPasswordSubmit = (values: z.infer<typeof passwordFormSchema>) => {
+    // In a real app, this would make an API call to update the password
+    toast({
+      title: "Password changed",
+      description: "Your password has been changed successfully.",
+    });
+    passwordForm.reset({
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+  };
+
   // Filter repairs based on search query and status filter
   const filteredRepairs = repairs.filter((repair) => {
     const matchesSearch = searchQuery === "" || 
@@ -203,7 +293,8 @@ const Dashboard = () => {
     "in_repair", 
     "awaiting_collection", 
     "fixed_awaiting_delivery",
-    "repair_in_progress"
+    "repair_in_progress",
+    "price_confirmed_in_repair"
   ].includes(r.status as any)).length;
   const pendingCount = repairs.filter(r => [
     "pending_confirmation",
@@ -285,6 +376,7 @@ const Dashboard = () => {
                 <SelectItem value="in_repair">In Repair</SelectItem>
                 <SelectItem value="waiting_price_confirmation">Waiting for Approval</SelectItem>
                 <SelectItem value="repair_in_progress">Repair in Progress</SelectItem>
+                <SelectItem value="price_confirmed_in_repair">In Repair (Price Confirmed)</SelectItem>
                 <SelectItem value="fixed_awaiting_delivery">Fixed & Awaiting Delivery</SelectItem>
                 <SelectItem value="repair_rejected">Repair Rejected</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
@@ -375,7 +467,7 @@ const Dashboard = () => {
         </div>
         
         {/* Main Content */}
-        <Tabs defaultValue="repairs" className="space-y-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList>
             <TabsTrigger value="repairs">My Repairs</TabsTrigger>
             <TabsTrigger value="notifications" className="relative">
@@ -384,6 +476,7 @@ const Dashboard = () => {
                 <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-blue-500"></span>
               )}
             </TabsTrigger>
+            <TabsTrigger value="profile">Profile</TabsTrigger>
           </TabsList>
           
           <TabsContent value="repairs" className="space-y-4">
@@ -400,6 +493,8 @@ const Dashboard = () => {
                     dateCreated={repair.dateCreated}
                     lastUpdated={repair.lastUpdated}
                     price={repair.price}
+                    fixerNotes={repair.fixerNotes}
+                    assignedFixer={repair.assignedFixer}
                   />
                 ))
               ) : (
@@ -435,6 +530,161 @@ const Dashboard = () => {
               )}
             </div>
           </TabsContent>
+          
+          <TabsContent value="profile">
+            <div className="grid gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Profile Information</CardTitle>
+                  <CardDescription>
+                    Update your account details and personal information.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Form {...profileForm}>
+                    <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-6">
+                      <FormField
+                        control={profileForm.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Full Name</FormLabel>
+                            <div className="relative">
+                              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                              <FormControl>
+                                <Input className="pl-9" placeholder="Your name" {...field} />
+                              </FormControl>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={profileForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <div className="relative">
+                              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                              <FormControl>
+                                <Input className="pl-9" placeholder="Your email" {...field} />
+                              </FormControl>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={profileForm.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Phone Number</FormLabel>
+                            <div className="relative">
+                              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                              <FormControl>
+                                <Input className="pl-9" placeholder="Your phone number" {...field} />
+                              </FormControl>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={profileForm.control}
+                        name="address"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Address</FormLabel>
+                            <div className="relative">
+                              <MapPin className="absolute left-3 top-3 text-gray-400 h-4 w-4" />
+                              <FormControl>
+                                <Textarea className="pl-9 min-h-[100px]" placeholder="Your address" {...field} />
+                              </FormControl>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <Button type="submit" className="w-full">Save Changes</Button>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Change Password</CardTitle>
+                  <CardDescription>
+                    Update your password to keep your account secure.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Form {...passwordForm}>
+                    <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-6">
+                      <FormField
+                        control={passwordForm.control}
+                        name="currentPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Current Password</FormLabel>
+                            <div className="relative">
+                              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                              <FormControl>
+                                <Input className="pl-9" type="password" placeholder="Your current password" {...field} />
+                              </FormControl>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={passwordForm.control}
+                        name="newPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>New Password</FormLabel>
+                            <div className="relative">
+                              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                              <FormControl>
+                                <Input className="pl-9" type="password" placeholder="Your new password" {...field} />
+                              </FormControl>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={passwordForm.control}
+                        name="confirmPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Confirm New Password</FormLabel>
+                            <div className="relative">
+                              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                              <FormControl>
+                                <Input className="pl-9" type="password" placeholder="Confirm your new password" {...field} />
+                              </FormControl>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <Button type="submit" className="w-full">Update Password</Button>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
         </Tabs>
       </div>
       
@@ -462,6 +712,12 @@ const Dashboard = () => {
                   <h4 className="text-sm font-medium text-gray-500">Repair Price</h4>
                   <p className="text-xl font-bold text-green-700">${selectedRepair.price}</p>
                 </div>
+                {selectedRepair.assignedFixer && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">Technician</h4>
+                    <p>{selectedRepair.assignedFixer}</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
