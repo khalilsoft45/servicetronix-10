@@ -1,12 +1,24 @@
 
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Menu, X, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -20,6 +32,22 @@ const Navbar = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleRepairRequest = () => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    } else {
+      navigate('/signin?referrer=/dashboard');
+    }
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase();
+  };
 
   return (
     <nav
@@ -43,14 +71,73 @@ const Navbar = () => {
           <Link to="/#contact" className="text-sala7li-dark hover:text-sala7li-primary font-medium">
             Contact
           </Link>
-          <div className="flex space-x-2">
-            <Button asChild variant="outline">
-              <Link to="/signin">Sign In</Link>
-            </Button>
-            <Button asChild>
-              <Link to="/signup">Sign Up</Link>
-            </Button>
-          </div>
+          
+          {isAuthenticated && user ? (
+            <div className="flex items-center space-x-4">
+              <Button onClick={handleRepairRequest}>
+                Request Repair
+              </Button>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      {user.avatar ? (
+                        <AvatarImage src={user.avatar} alt={user.name} />
+                      ) : (
+                        <AvatarFallback className="bg-sala7li-primary text-white">
+                          {getInitials(user.name)}
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{user.name}</p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => {
+                    switch(user.role) {
+                      case 'admin':
+                        navigate('/admin');
+                        break;
+                      case 'fixer':
+                        navigate('/fixer');
+                        break;
+                      case 'operator':
+                        navigate('/operator');
+                        break;
+                      case 'collector':
+                        navigate('/collector');
+                        break;
+                      default:
+                        navigate('/dashboard');
+                    }
+                  }}>
+                    Dashboard
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => logout()}>
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          ) : (
+            <div className="flex space-x-2">
+              <Button asChild variant="outline">
+                <Link to="/signin">Sign In</Link>
+              </Button>
+              <Button asChild>
+                <Link to="/signup">Sign Up</Link>
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Mobile Navigation Toggle */}
@@ -93,14 +180,79 @@ const Navbar = () => {
             >
               Contact
             </Link>
-            <div className="flex flex-col space-y-2">
-              <Button asChild variant="outline" className="w-full">
-                <Link to="/signin">Sign In</Link>
-              </Button>
-              <Button asChild className="w-full">
-                <Link to="/signup">Sign Up</Link>
-              </Button>
-            </div>
+            
+            {isAuthenticated && user ? (
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center space-x-2 py-2">
+                  <Avatar className="h-8 w-8">
+                    {user.avatar ? (
+                      <AvatarImage src={user.avatar} alt={user.name} />
+                    ) : (
+                      <AvatarFallback className="bg-sala7li-primary text-white">
+                        {getInitials(user.name)}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  <div>
+                    <p className="text-sm font-medium">{user.name}</p>
+                    <p className="text-xs text-gray-500">{user.role}</p>
+                  </div>
+                </div>
+                <Button 
+                  className="w-full" 
+                  onClick={() => {
+                    setIsOpen(false);
+                    handleRepairRequest();
+                  }}
+                >
+                  Request Repair
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => {
+                    setIsOpen(false);
+                    switch(user.role) {
+                      case 'admin':
+                        navigate('/admin');
+                        break;
+                      case 'fixer':
+                        navigate('/fixer');
+                        break;
+                      case 'operator':
+                        navigate('/operator');
+                        break;
+                      case 'collector':
+                        navigate('/collector');
+                        break;
+                      default:
+                        navigate('/dashboard');
+                    }
+                  }}
+                >
+                  Dashboard
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  className="w-full"
+                  onClick={() => {
+                    setIsOpen(false);
+                    logout();
+                  }}
+                >
+                  Log out
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col space-y-2">
+                <Button asChild className="w-full" onClick={() => setIsOpen(false)}>
+                  <Link to="/signin">Sign In</Link>
+                </Button>
+                <Button asChild variant="outline" className="w-full" onClick={() => setIsOpen(false)}>
+                  <Link to="/signup">Sign Up</Link>
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       )}

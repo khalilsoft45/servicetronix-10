@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,17 +8,49 @@ import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Mail, Lock, LogIn } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 
 const SignIn = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { login, isAuthenticated, user } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
   const [loading, setLoading] = useState(false);
+
+  // If user is already authenticated, redirect them based on their role
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const referrer = new URLSearchParams(location.search).get('referrer');
+      
+      if (referrer) {
+        navigate(referrer);
+        return;
+      }
+      
+      switch (user.role) {
+        case 'admin':
+          navigate('/admin');
+          break;
+        case 'fixer':
+          navigate('/fixer');
+          break;
+        case 'operator':
+          navigate('/operator');
+          break;
+        case 'collector':
+          navigate('/collector');
+          break;
+        default:
+          navigate('/dashboard');
+      }
+    }
+  }, [isAuthenticated, user, navigate, location]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -27,61 +60,26 @@ const SignIn = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      
-      // Check for admin credentials (in a real app, this would be handled by backend)
-      if (formData.email === "admin@sala7li.com" && formData.password === "admin123") {
-        toast({
-          title: "Login successful!",
-          description: "Welcome back, Admin.",
-        });
-        navigate("/admin");
-        return;
-      }
-      
-      // Check for fixer credentials
-      if (formData.email === "fixer@sala7li.com" && formData.password === "fixer123") {
-        toast({
-          title: "Login successful!",
-          description: "Welcome back, Fixer.",
-        });
-        navigate("/fixer");
-        return;
-      }
-      
-      // Check for operator credentials
-      if (formData.email === "operator@sala7li.com" && formData.password === "operator123") {
-        toast({
-          title: "Login successful!",
-          description: "Welcome back, Operator.",
-        });
-        navigate("/operator");
-        return;
-      }
-      
-      // Check for collector credentials
-      if (formData.email === "collector@sala7li.com" && formData.password === "collector123") {
-        toast({
-          title: "Login successful!",
-          description: "Welcome back, Collector.",
-        });
-        navigate("/collector");
-        return;
-      }
-      
-      // Default to user dashboard for all other logins
+    const success = await login(formData.email, formData.password);
+    
+    setLoading(false);
+    
+    if (success) {
       toast({
         title: "Login successful!",
         description: "Welcome back to Sala7li.",
       });
-      navigate("/dashboard");
-    }, 1500);
+    } else {
+      toast({
+        title: "Login failed",
+        description: "Invalid email or password.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleGoogleSignIn = () => {

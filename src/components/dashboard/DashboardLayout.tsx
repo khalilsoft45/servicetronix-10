@@ -3,6 +3,8 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/context/AuthContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Home,
   ClipboardList,
@@ -22,14 +24,20 @@ interface DashboardLayoutProps {
 const DashboardLayout = ({ children, title, role = "user" }: DashboardLayoutProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = () => {
-    toast({
-      title: "Logged out",
-      description: "You have been logged out successfully.",
-    });
-    navigate("/");
+    logout();
+  };
+
+  // Get user's initials for avatar
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase();
   };
 
   // Role-specific navigation items
@@ -96,12 +104,18 @@ const DashboardLayout = ({ children, title, role = "user" }: DashboardLayoutProp
             </button>
             <div className="hidden md:flex items-center space-x-2">
               <div className="text-sm">
-                <p className="font-medium text-gray-700">John Doe</p>
+                <p className="font-medium text-gray-700">{user?.name || "User"}</p>
                 <p className="text-gray-500">{role}</p>
               </div>
-              <div className="h-8 w-8 rounded-full bg-sala7li-primary flex items-center justify-center text-white font-medium">
-                JD
-              </div>
+              <Avatar className="h-8 w-8">
+                {user?.avatar ? (
+                  <AvatarImage src={user.avatar} alt={user.name} />
+                ) : (
+                  <AvatarFallback className="bg-sala7li-primary text-white">
+                    {user?.name ? getInitials(user.name) : "U"}
+                  </AvatarFallback>
+                )}
+              </Avatar>
             </div>
           </div>
         </div>
