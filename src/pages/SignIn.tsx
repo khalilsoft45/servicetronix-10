@@ -7,6 +7,13 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Mail, Lock, LogIn } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -14,6 +21,7 @@ const SignIn = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    role: "user", // Default role
   });
   const [loading, setLoading] = useState(false);
 
@@ -25,6 +33,13 @@ const SignIn = () => {
     }));
   };
 
+  const handleRoleChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      role: value,
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -32,13 +47,30 @@ const SignIn = () => {
     // Simulate API call
     setTimeout(() => {
       setLoading(false);
+      
+      // Success message
       toast({
         title: "Login successful!",
-        description: "Welcome back to Sala7li.",
+        description: `Welcome back to Sala7li as ${formData.role}.`,
       });
       
-      // For demonstration purposes, redirect to dashboard
-      navigate("/dashboard");
+      // Redirect based on role
+      switch(formData.role) {
+        case "admin":
+          navigate("/admin");
+          break;
+        case "fixer":
+          navigate("/fixer");
+          break;
+        case "operator":
+          navigate("/operator");
+          break;
+        case "collector":
+          navigate("/collector");
+          break;
+        default:
+          navigate("/dashboard");
+      }
     }, 1500);
   };
 
@@ -53,8 +85,24 @@ const SignIn = () => {
         description: "Welcome back to Sala7li.",
       });
       
-      // For demonstration purposes, redirect to dashboard
-      navigate("/dashboard");
+      // For demonstration purposes, redirect based on role
+      // In a real app, the role would come from the auth provider
+      switch(formData.role) {
+        case "admin":
+          navigate("/admin");
+          break;
+        case "fixer":
+          navigate("/fixer");
+          break;
+        case "operator":
+          navigate("/operator");
+          break;
+        case "collector":
+          navigate("/collector");
+          break;
+        default:
+          navigate("/dashboard");
+      }
     }, 1500);
   };
 
@@ -120,6 +168,25 @@ const SignIn = () => {
                     onChange={handleChange}
                   />
                 </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="role">Sign in as</Label>
+                <Select
+                  value={formData.role}
+                  onValueChange={handleRoleChange}
+                >
+                  <SelectTrigger id="role" className="w-full">
+                    <SelectValue placeholder="Select your role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">Customer</SelectItem>
+                    <SelectItem value="admin">Administrator</SelectItem>
+                    <SelectItem value="fixer">Fixer/Technician</SelectItem>
+                    <SelectItem value="operator">Phone Operator</SelectItem>
+                    <SelectItem value="collector">Collector</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               
               <Button type="submit" className="w-full" disabled={loading}>
