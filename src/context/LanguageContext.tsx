@@ -11,6 +11,12 @@ type LanguageContextType = {
   t: (key: string) => string;
 };
 
+// Define the props type for the LanguageProvider
+interface LanguageProviderProps {
+  children: ReactNode;
+  defaultLanguage?: Language;
+}
+
 // Create the context with default values
 const LanguageContext = createContext<LanguageContextType>({
   language: 'fr',
@@ -179,8 +185,11 @@ const translations: Record<Language, Record<string, string>> = {
 };
 
 // Create the provider component
-export const LanguageProvider: React.FC<{children: ReactNode}> = ({ children }) => {
-  const [language, setLanguage] = useState<Language>('fr');
+export const LanguageProvider: React.FC<LanguageProviderProps> = ({ 
+  children, 
+  defaultLanguage = 'fr' 
+}) => {
+  const [language, setLanguage] = useState<Language>(defaultLanguage);
 
   // Translate function
   const t = (key: string) => {
