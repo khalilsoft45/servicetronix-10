@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -167,10 +166,6 @@ const SignIn = () => {
                   />
                 </div>
               </div>
-              
-              <p className="text-xs text-amber-600 mt-2">
-                {t('auth.staff.note')}
-              </p>
               
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? t('auth.signin.button') + "..." : t('auth.signin.button')}

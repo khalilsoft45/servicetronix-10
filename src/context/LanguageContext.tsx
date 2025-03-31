@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 
 // Define the available languages
@@ -65,8 +64,6 @@ const translations: Record<Language, Record<string, string>> = {
     "auth.role.fixer": "Réparateur/Technicien",
     "auth.role.operator": "Opérateur téléphonique",
     "auth.role.collector": "Collecteur",
-    "auth.staff.note": "Personnel: Utilisez les identifiants fournis par votre administrateur.",
-    "auth.staff.register.note": "Les membres du personnel (Réparateurs, Opérateurs, Collecteurs) ne peuvent pas s'inscrire ici. Veuillez contacter votre administrateur pour obtenir vos identifiants de connexion.",
     "auth.terms": "En vous inscrivant, vous acceptez nos",
     "auth.terms.service": "Conditions d'utilisation",
     "auth.privacy.policy": "Politique de confidentialité",
@@ -143,8 +140,6 @@ const translations: Record<Language, Record<string, string>> = {
     "auth.role.fixer": "Fixer/Technician",
     "auth.role.operator": "Phone Operator",
     "auth.role.collector": "Collector",
-    "auth.staff.note": "Staff members: Use the credentials provided by your administrator.",
-    "auth.staff.register.note": "Staff members (Fixers, Operators, Collectors) cannot register here. Please contact your administrator for login credentials.",
     "auth.terms": "By signing up, you agree to our",
     "auth.terms.service": "Terms of Service",
     "auth.privacy.policy": "Privacy Policy",
