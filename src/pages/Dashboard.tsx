@@ -71,7 +71,7 @@ const Dashboard = () => {
   const { toast } = useToast();
   const [repairs] = useState(sampleRepairs);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [newRepairForm, setNewRepairForm] = useState({
     deviceType: "",
     deviceModel: "",
@@ -113,7 +113,7 @@ const Dashboard = () => {
       repair.issue.toLowerCase().includes(searchQuery.toLowerCase()) ||
       repair.id.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesStatus = statusFilter === "" || repair.status === statusFilter;
+    const matchesStatus = statusFilter === "all" || repair.status === statusFilter;
     
     return matchesSearch && matchesStatus;
   });
@@ -192,7 +192,7 @@ const Dashboard = () => {
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Statuses</SelectItem>
+                <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="pending_confirmation">Pending Confirmation</SelectItem>
                 <SelectItem value="awaiting_collection">Awaiting Collection</SelectItem>
                 <SelectItem value="in_repair">In Repair</SelectItem>

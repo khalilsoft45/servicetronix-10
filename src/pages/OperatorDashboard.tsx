@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -15,7 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-// Sample data for new requests
 const newRequestsData = [
   {
     id: "REQ-001",
@@ -49,7 +47,6 @@ const newRequestsData = [
   },
 ];
 
-// Sample data for confirmed requests
 const confirmedRequestsData = [
   {
     id: "REQ-004",
@@ -92,7 +89,6 @@ const confirmedRequestsData = [
   },
 ];
 
-// Sample collectors data
 const collectorsData = [
   { id: 1, name: "James Wilson", available: true },
   { id: 2, name: "Robert Miller", available: true },
@@ -135,7 +131,6 @@ const OperatorDashboard = () => {
   };
 
   const handleConfirmRequest = () => {
-    // Get collector name
     const collector = collectors.find(c => c.id === parseInt(confirmForm.collectorId));
     if (!collector) {
       toast({
@@ -146,7 +141,6 @@ const OperatorDashboard = () => {
       return;
     }
 
-    // Update request lists
     const updatedNewRequests = newRequests.filter(req => req.id !== currentRequest.id);
     const confirmedRequest = {
       ...currentRequest,
@@ -194,7 +188,6 @@ const OperatorDashboard = () => {
     });
   };
 
-  // Filter data based on search query
   const filteredNewRequests = newRequests.filter(req => {
     return (
       req.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -439,7 +432,6 @@ const OperatorDashboard = () => {
         </Tabs>
       </div>
 
-      {/* Request Details Dialog */}
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -505,7 +497,6 @@ const OperatorDashboard = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Confirm Request Dialog */}
       <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +13,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast";
 import { Search, Plus, Edit, Trash, User, Settings, Wrench, Phone, Truck } from "lucide-react";
 
-// Sample data for users table
 const sampleUsers = [
   { id: 1, name: "Admin User", email: "admin@sala7li.com", role: "admin", active: true },
   { id: 2, name: "Fixer User", email: "fixer@sala7li.com", role: "fixer", active: true },
@@ -24,7 +22,6 @@ const sampleUsers = [
   { id: 6, name: "Jane Smith", email: "jane@example.com", role: "client", active: true },
 ];
 
-// Sample data for repairs table
 const sampleRepairs = [
   { id: "REP-001", client: "John Doe", device: "MacBook Pro", issue: "Screen issue", status: "pending", assignedTo: "" },
   { id: "REP-002", client: "Jane Smith", device: "iPhone 12", issue: "Battery problem", status: "in_repair", assignedTo: "Fixer User" },
@@ -62,7 +59,6 @@ const AdminDashboard = () => {
   };
 
   const handleAddUser = () => {
-    // In a real application, this would make an API call
     const newUser = {
       id: users.length + 1,
       name: newUserForm.name,
@@ -87,7 +83,6 @@ const AdminDashboard = () => {
   };
 
   const handleDeleteUser = (id: number) => {
-    // In a real application, this would make an API call
     setUsers(users.filter(user => user.id !== id));
 
     toast({
@@ -97,7 +92,6 @@ const AdminDashboard = () => {
   };
 
   const handleAssignRepair = (repairId: string, assignee: string) => {
-    // In a real application, this would make an API call
     setRepairs(repairs.map(repair => {
       if (repair.id === repairId) {
         return {
@@ -116,7 +110,6 @@ const AdminDashboard = () => {
   };
 
   const handleUpdateRepairStatus = (repairId: string, status: string) => {
-    // In a real application, this would make an API call
     setRepairs(repairs.map(repair => {
       if (repair.id === repairId) {
         return {
@@ -133,13 +126,11 @@ const AdminDashboard = () => {
     });
   };
 
-  // Filter users based on search query
   const filteredUsers = users.filter(user => 
     user.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     user.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Filter repairs based on search query
   const filteredRepairs = repairs.filter(repair => 
     repair.client.toLowerCase().includes(searchQuery.toLowerCase()) || 
     repair.device.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -475,7 +466,7 @@ const AdminDashboard = () => {
                                   <SelectValue placeholder={t('admin.assign')} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="">{t('admin.unassigned')}</SelectItem>
+                                  <SelectItem value="unassigned">{t('admin.unassigned')}</SelectItem>
                                   <SelectItem value="Fixer User">{t('admin.fixer.user')}</SelectItem>
                                   <SelectItem value="Collector User">{t('admin.collector.user')}</SelectItem>
                                   <SelectItem value="Operator User">{t('admin.operator.user')}</SelectItem>
