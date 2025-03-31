@@ -35,8 +35,10 @@ export const repairService = {
         ["awaiting_collection", "fixed_awaiting_delivery"].includes(repair.status)
       );
     } else {
+      // For regular users, normally we would filter by the user's ID
+      // For now, just return a subset of repairs
       return repairsDatabase.filter(repair => 
-        repair.clientName.includes("John") // Example filter for regular users
+        repair.clientName.includes("John")
       );
     }
   },
@@ -52,7 +54,8 @@ export const repairService = {
 
     repairsDatabase[repairIndex] = {
       ...repairsDatabase[repairIndex],
-      status
+      status,
+      lastUpdated: new Date().toISOString()
     };
 
     return repairsDatabase[repairIndex];
@@ -70,7 +73,8 @@ export const repairService = {
     repairsDatabase[repairIndex] = {
       ...repairsDatabase[repairIndex],
       price,
-      status: "waiting_client_approval" as RepairStatus
+      status: "waiting_client_approval" as RepairStatus,
+      lastUpdated: new Date().toISOString()
     };
 
     return repairsDatabase[repairIndex];
@@ -89,7 +93,8 @@ export const repairService = {
       ...repairsDatabase[repairIndex],
       status: "completed" as RepairStatus,
       dateCompleted: new Date().toISOString().split('T')[0],
-      notes
+      notes,
+      lastUpdated: new Date().toISOString()
     };
 
     return repairsDatabase[repairIndex];
@@ -107,7 +112,8 @@ export const repairService = {
     repairsDatabase[repairIndex] = {
       ...repairsDatabase[repairIndex],
       assignedCollector: collectorName,
-      status: "awaiting_collection" as RepairStatus
+      status: "awaiting_collection" as RepairStatus,
+      lastUpdated: new Date().toISOString()
     };
 
     return repairsDatabase[repairIndex];
