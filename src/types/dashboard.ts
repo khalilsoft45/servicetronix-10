@@ -8,4 +8,4 @@ export interface NewRepairFormData {
 
 // Import RepairStatus from repair.ts to avoid duplication
 import { RepairStatus } from "./repair";
-export { RepairStatus };
+export type { RepairStatus };

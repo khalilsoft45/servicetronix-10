@@ -36,7 +36,6 @@ const RepairStatusCard = ({
           description: "Waiting for phone operator to call and confirm details.",
         };
       case "awaiting_collection":
-      case "confirmed_awaiting_collection":
         return {
           label: "Awaiting Collection",
           color: "bg-blue-100 text-blue-800",
@@ -87,6 +86,35 @@ const RepairStatusCard = ({
           color: "bg-green-100 text-green-800",
           icon: CheckCircle,
           description: "The repair has been completed successfully.",
+        };
+      // Added additional cases from RepairStatus type
+      case "assigned":
+        return {
+          label: "Assigned",
+          color: "bg-blue-100 text-blue-800",
+          icon: User,
+          description: "A technician has been assigned to your repair.",
+        };
+      case "in_progress":
+        return {
+          label: "In Progress",
+          color: "bg-indigo-100 text-indigo-800",
+          icon: Wrench,
+          description: "Your repair is in progress.",
+        };
+      case "waiting_for_parts":
+        return {
+          label: "Waiting for Parts",
+          color: "bg-yellow-100 text-yellow-800",
+          icon: Clock,
+          description: "We're waiting for parts to arrive for your repair.",
+        };
+      case "waiting_client_approval":
+        return {
+          label: "Waiting for Approval",
+          color: "bg-orange-100 text-orange-800",
+          icon: DollarSign,
+          description: "Waiting for your approval before proceeding.",
         };
       default:
         return {
