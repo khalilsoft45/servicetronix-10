@@ -237,11 +237,14 @@ const CollectorDashboard = () => {
   const handleUpdateSubmit = () => {
     if (!selectedAssignment || !updateForm.newStatus) return;
 
+    // Type assertion to ensure newStatus is an AssignmentStatus
+    const newStatus = updateForm.newStatus as AssignmentStatus;
+
     const updatedAssignments = assignments.map(assignment => {
       if (assignment.id === selectedAssignment.id) {
         return {
           ...assignment,
-          status: updateForm.newStatus,
+          status: newStatus,
           notes: updateForm.notes 
             ? (assignment.notes ? `${assignment.notes}\n${updateForm.notes}` : updateForm.notes)
             : assignment.notes
@@ -254,7 +257,7 @@ const CollectorDashboard = () => {
     setUpdateStatusDialogOpen(false);
     toast({
       title: "Status updated",
-      description: `Assignment status updated to ${getStatusLabel(updateForm.newStatus)}.`
+      description: `Assignment status updated to ${getStatusLabel(newStatus)}.`
     });
   };
 

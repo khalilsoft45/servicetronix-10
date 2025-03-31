@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Clock, CheckCircle, Wrench, Truck, Phone, DollarSign, XCircle } from "lucide-react";
 
-type RepairStatus = 
+export type RepairStatus = 
   | "pending_confirmation" 
   | "awaiting_collection" 
   | "in_repair" 
