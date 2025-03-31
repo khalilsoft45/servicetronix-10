@@ -11,6 +11,7 @@ import ProfileForms from "@/components/dashboard/ProfileForms";
 import NewRepairDialog from "@/components/dashboard/NewRepairDialog";
 import PriceConfirmationDialog from "@/components/dashboard/PriceConfirmationDialog";
 import { Notification } from "@/components/dashboard/NotificationsList";
+import { NotificationType } from "@/components/dashboard/NotificationItem";
 
 const sampleRepairs = [
   {
