@@ -1,22 +1,27 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/context/LanguageContext";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Clock, CheckCircle2, AlertTriangle, Wrench, X, DollarSign, Bell } from "lucide-react";
+import { Search, Clock, CheckCircle2, AlertTriangle, Wrench, Bell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import NotificationItem, { NotificationType } from "@/components/dashboard/NotificationItem";
+import { Notification } from "@/components/dashboard/NotificationsList";
+import { NotificationType } from "@/components/dashboard/NotificationItem";
+import RepairCard from "@/components/fixer-dashboard/RepairCard";
+import CompletedRepairCard from "@/components/fixer-dashboard/CompletedRepairCard";
+import RepairDetailsDialog from "@/components/fixer-dashboard/RepairDetailsDialog";
+import SetPriceDialog from "@/components/fixer-dashboard/SetPriceDialog";
+import CompleteRepairDialog from "@/components/fixer-dashboard/CompleteRepairDialog";
+import { Repair, RepairStatus } from "@/types/repair";
+import NotificationsList from "@/components/dashboard/NotificationsList";
 
 // Sample assigned repairs data
-const assignedRepairsData = [
+const assignedRepairsData: Repair[] = [
   {
     id: "REP-001",
     clientName: "John Doe",
@@ -75,7 +80,7 @@ const assignedRepairsData = [
 ];
 
 // Sample completed repairs data
-const completedRepairsData = [
+const completedRepairsData: Repair[] = [
   {
     id: "REP-004",
     clientName: "Emily Johnson",
@@ -101,7 +106,7 @@ const completedRepairsData = [
 ];
 
 // Sample notifications
-const sampleNotifications = [
+const sampleNotifications: Notification[] = [
   {
     id: "NOTIF-001",
     type: "info" as NotificationType,
@@ -134,11 +139,11 @@ const sampleNotifications = [
 const FixerDashboard = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
-  const [assignedRepairs, setAssignedRepairs] = useState(assignedRepairsData);
-  const [completedRepairs, setCompletedRepairs] = useState(completedRepairsData);
-  const [notifications, setNotifications] = useState(sampleNotifications);
+  const [assignedRepairs, setAssignedRepairs] = useState<Repair[]>(assignedRepairsData);
+  const [completedRepairs, setCompletedRepairs] = useState<Repair[]>(completedRepairsData);
+  const [notifications, setNotifications] = useState<Notification[]>(sampleNotifications);
   const [searchQuery, setSearchQuery] = useState("");
-  const [repairDetails, setRepairDetails] = useState<any>(null);
+  const [repairDetails, setRepairDetails] = useState<Repair | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [priceDialogOpen, setPriceDialogOpen] = useState(false);
   const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
@@ -155,12 +160,12 @@ const FixerDashboard = () => {
     setSearchQuery(e.target.value);
   };
 
-  const handleViewDetails = (repair: any) => {
+  const handleViewDetails = (repair: Repair) => {
     setRepairDetails(repair);
     setDetailsOpen(true);
   };
 
-  const handleSetPrice = (repair: any) => {
+  const handleSetPrice = (repair: Repair) => {
     setRepairDetails(repair);
     setPriceForm({
       price: repair.price ? String(repair.price) : "",
@@ -170,7 +175,7 @@ const FixerDashboard = () => {
     setPriceDialogOpen(true);
   };
 
-  const handleCompleteRepair = (repair: any) => {
+  const handleCompleteRepair = (repair: Repair) => {
     setRepairDetails(repair);
     setCompleteForm({
       notes: repair.notes || "",
@@ -180,13 +185,13 @@ const FixerDashboard = () => {
 
   const handlePriceSubmit = () => {
     const updatedRepairs = assignedRepairs.map(repair => {
-      if (repair.id === repairDetails.id) {
+      if (repair.id === repairDetails?.id) {
         return {
           ...repair,
           price: parseFloat(priceForm.price),
           estimatedCompletion: priceForm.estimatedCompletion,
           notes: priceForm.notes,
-          status: "waiting_client_approval",
+          status: "waiting_client_approval" as RepairStatus,
         };
       }
       return repair;
@@ -196,23 +201,23 @@ const FixerDashboard = () => {
     setPriceDialogOpen(false);
     toast({
       title: "Price set successfully",
-      description: `Price for repair ${repairDetails.id} has been set to $${priceForm.price}`,
+      description: `Price for repair ${repairDetails?.id} has been set to $${priceForm.price}`,
     });
   };
 
   const handleCompleteSubmit = () => {
     // Find the repair to mark as complete
-    const repairToComplete = assignedRepairs.find(repair => repair.id === repairDetails.id);
+    const repairToComplete = assignedRepairs.find(repair => repair.id === repairDetails?.id);
     if (!repairToComplete) return;
 
     // Remove from assigned repairs
-    setAssignedRepairs(assignedRepairs.filter(repair => repair.id !== repairDetails.id));
+    setAssignedRepairs(assignedRepairs.filter(repair => repair.id !== repairDetails?.id));
 
     // Add to completed repairs with today's date
     setCompletedRepairs([
       {
         ...repairToComplete,
-        status: "completed",
+        status: "completed" as RepairStatus,
         dateCompleted: new Date().toISOString().split('T')[0],
         notes: completeForm.notes,
       },
@@ -222,11 +227,11 @@ const FixerDashboard = () => {
     setCompleteDialogOpen(false);
     toast({
       title: "Repair marked as complete",
-      description: `Repair ${repairDetails.id} has been marked as completed.`,
+      description: `Repair ${repairDetails?.id} has been marked as completed.`,
     });
   };
 
-  const handleNotificationClick = (notification: any) => {
+  const handleNotificationClick = (notification: Notification) => {
     const repair = [...assignedRepairs, ...completedRepairs].find(r => r.id === notification.repairId);
     if (repair) {
       setRepairDetails(repair);
@@ -350,80 +355,13 @@ const FixerDashboard = () => {
             {filteredAssignedRepairs.length > 0 ? (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {filteredAssignedRepairs.map((repair) => (
-                  <Card key={repair.id} className="overflow-hidden">
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="text-lg">{repair.deviceType}</CardTitle>
-                          <CardDescription>{repair.clientName}</CardDescription>
-                        </div>
-                        {getStatusBadge(repair.status)}
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">{t('fixer.repair.id')}:</span>
-                          <span className="font-medium">{repair.id}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">{t('fixer.assigned.date')}:</span>
-                          <span>{repair.dateAssigned}</span>
-                        </div>
-                        {repair.price && (
-                          <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">{t('fixer.price')}:</span>
-                            <span className="font-medium">${repair.price}</span>
-                          </div>
-                        )}
-                        <div className="mt-2">
-                          <p className="text-sm text-muted-foreground mb-1">{t('fixer.issue')}:</p>
-                          <p className="text-sm line-clamp-2">{repair.issue}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                    <CardFooter className="flex justify-between pt-0">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => handleViewDetails(repair)}
-                      >
-                        {t('fixer.view.details')}
-                      </Button>
-                      
-                      {repair.status === "assigned" ? (
-                        <Button 
-                          size="sm" 
-                          onClick={() => handleSetPrice(repair)}
-                        >
-                          <DollarSign className="mr-1 h-4 w-4" />
-                          {t('fixer.set.price')}
-                        </Button>
-                      ) : repair.status === "in_progress" ? (
-                        <Button 
-                          size="sm" 
-                          onClick={() => handleCompleteRepair(repair)}
-                        >
-                          <CheckCircle2 className="mr-1 h-4 w-4" />
-                          {t('fixer.mark.complete')}
-                        </Button>
-                      ) : repair.status === "waiting_client_approval" ? (
-                        <Button size="sm" variant="outline" disabled>
-                          <Clock className="mr-1 h-4 w-4" />
-                          Awaiting Response
-                        </Button>
-                      ) : (
-                        <Button 
-                          size="sm" 
-                          variant={repair.status === "waiting_for_parts" ? "outline" : "default"}
-                          onClick={() => handleViewDetails(repair)}
-                        >
-                          <Wrench className="mr-1 h-4 w-4" />
-                          {t('fixer.view.details')}
-                        </Button>
-                      )}
-                    </CardFooter>
-                  </Card>
+                  <RepairCard
+                    key={repair.id}
+                    repair={repair}
+                    onViewDetails={handleViewDetails}
+                    onSetPrice={handleSetPrice}
+                    onCompleteRepair={handleCompleteRepair}
+                  />
                 ))}
               </div>
             ) : (
@@ -446,46 +384,11 @@ const FixerDashboard = () => {
             {filteredCompletedRepairs.length > 0 ? (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {filteredCompletedRepairs.map((repair) => (
-                  <Card key={repair.id}>
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="text-lg">{repair.deviceType}</CardTitle>
-                          <CardDescription>{repair.clientName}</CardDescription>
-                        </div>
-                        {getStatusBadge(repair.status)}
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">{t('fixer.repair.id')}:</span>
-                          <span className="font-medium">{repair.id}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">{t('fixer.completion.date')}:</span>
-                          <span>{repair.dateCompleted}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">{t('fixer.price')}:</span>
-                          <span className="font-medium">${repair.price}</span>
-                        </div>
-                        <div className="mt-2">
-                          <p className="text-sm text-muted-foreground mb-1">{t('fixer.issue')}:</p>
-                          <p className="text-sm line-clamp-2">{repair.issue}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                    <CardFooter className="flex justify-center pt-0">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => handleViewDetails(repair)}
-                      >
-                        {t('fixer.view.details')}
-                      </Button>
-                    </CardFooter>
-                  </Card>
+                  <CompletedRepairCard
+                    key={repair.id}
+                    repair={repair}
+                    onViewDetails={handleViewDetails}
+                  />
                 ))}
               </div>
             ) : (
@@ -505,177 +408,39 @@ const FixerDashboard = () => {
 
           {/* Notifications Tab */}
           <TabsContent value="notifications">
-            <div className="space-y-4">
-              {notifications.length > 0 ? (
-                notifications.map((notification) => (
-                  <NotificationItem
-                    key={notification.id}
-                    id={notification.id}
-                    type={notification.type}
-                    title={notification.title}
-                    message={notification.message}
-                    time={notification.time}
-                    isNew={notification.isNew}
-                    onClick={() => handleNotificationClick(notification)}
-                  />
-                ))
-              ) : (
-                <Card>
-                  <CardContent className="py-8 text-center">
-                    <Bell className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                    <p className="text-gray-500">No notifications yet.</p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+            <NotificationsList 
+              notifications={notifications}
+              onNotificationClick={handleNotificationClick}
+            />
           </TabsContent>
         </Tabs>
       </div>
 
-      {/* Repair Details Dialog */}
-      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>{t('fixer.repair.details')}</DialogTitle>
-            <DialogDescription>
-              {repairDetails?.id} - {repairDetails?.deviceType}
-            </DialogDescription>
-          </DialogHeader>
-          {repairDetails && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium">{t('fixer.client')}:</p>
-                  <p>{repairDetails.clientName}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">{t('fixer.status')}:</p>
-                  <p>{getStatusBadge(repairDetails.status)}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">{t('fixer.assigned.date')}:</p>
-                  <p>{repairDetails.dateAssigned}</p>
-                </div>
-                {repairDetails.dateCompleted && (
-                  <div>
-                    <p className="text-sm font-medium">{t('fixer.completion.date')}:</p>
-                    <p>{repairDetails.dateCompleted}</p>
-                  </div>
-                )}
-                {repairDetails.estimatedCompletion && (
-                  <div>
-                    <p className="text-sm font-medium">{t('fixer.estimated.completion')}:</p>
-                    <p>{repairDetails.estimatedCompletion}</p>
-                  </div>
-                )}
-                {repairDetails.price !== null && (
-                  <div>
-                    <p className="text-sm font-medium">{t('fixer.price')}:</p>
-                    <p>${repairDetails.price}</p>
-                  </div>
-                )}
-              </div>
-              <div>
-                <p className="text-sm font-medium mb-1">{t('fixer.issue')}:</p>
-                <p className="text-sm">{repairDetails.issue}</p>
-              </div>
-              {repairDetails.notes && (
-                <div>
-                  <p className="text-sm font-medium mb-1">{t('fixer.notes')}:</p>
-                  <p className="text-sm">{repairDetails.notes}</p>
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Dialogs */}
+      <RepairDetailsDialog
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        repair={repairDetails}
+        getStatusBadge={getStatusBadge}
+      />
 
-      {/* Set Price Dialog */}
-      <Dialog open={priceDialogOpen} onOpenChange={setPriceDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>{t('fixer.set.repair.price')}</DialogTitle>
-            <DialogDescription>
-              {repairDetails?.id} - {repairDetails?.deviceType}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="price">{t('fixer.price')} ($)</Label>
-              <Input
-                id="price"
-                value={priceForm.price}
-                onChange={(e) => setPriceForm({ ...priceForm, price: e.target.value })}
-                type="number"
-                min="0"
-                step="0.01"
-              />
-              <p className="text-sm text-muted-foreground">Once set, this price cannot be changed later.</p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="estimatedCompletion">{t('fixer.estimated.completion.date')}</Label>
-              <Input
-                id="estimatedCompletion"
-                value={priceForm.estimatedCompletion}
-                onChange={(e) => setPriceForm({ ...priceForm, estimatedCompletion: e.target.value })}
-                type="date"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="notes">{t('fixer.repair.notes')}</Label>
-              <Textarea
-                id="notes"
-                value={priceForm.notes}
-                onChange={(e) => setPriceForm({ ...priceForm, notes: e.target.value })}
-                placeholder={t('fixer.repair.notes.placeholder')}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPriceDialogOpen(false)}>
-              {t('fixer.cancel')}
-            </Button>
-            <Button onClick={handlePriceSubmit} disabled={!priceForm.price || !priceForm.estimatedCompletion}>
-              {t('fixer.confirm.price')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <SetPriceDialog
+        open={priceDialogOpen}
+        onOpenChange={setPriceDialogOpen}
+        repair={repairDetails}
+        priceForm={priceForm}
+        setPriceForm={setPriceForm}
+        onSubmit={handlePriceSubmit}
+      />
 
-      {/* Mark as Complete Dialog */}
-      <Dialog open={completeDialogOpen} onOpenChange={setCompleteDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Mark Repair as Complete</DialogTitle>
-            <DialogDescription>
-              {repairDetails?.id} - {repairDetails?.deviceType}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="completeNotes">Completion Notes</Label>
-              <Textarea
-                id="completeNotes"
-                value={completeForm.notes}
-                onChange={(e) => setCompleteForm({ ...completeForm, notes: e.target.value })}
-                placeholder="Describe what was fixed and how"
-                className="mt-2"
-              />
-              <p className="text-sm text-muted-foreground mt-2">
-                Once marked as complete, this repair will be finalized and moved to completed repairs.
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCompleteDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCompleteSubmit}>
-              Confirm Completion
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CompleteRepairDialog
+        open={completeDialogOpen}
+        onOpenChange={setCompleteDialogOpen}
+        repair={repairDetails}
+        completeForm={completeForm}
+        setCompleteForm={setCompleteForm}
+        onSubmit={handleCompleteSubmit}
+      />
     </div>
   );
 };
