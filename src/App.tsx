@@ -18,6 +18,9 @@ import AdminDashboard from "./pages/AdminDashboard";
 import FixerDashboard from "./pages/FixerDashboard";
 import OperatorDashboard from "./pages/OperatorDashboard";
 import CollectorDashboard from "./pages/CollectorDashboard";
+import AdminAccount from "./pages/AdminAccount";
+import FixerAccount from "./pages/FixerAccount";
+import OperatorAccount from "./pages/OperatorAccount";
 import NotFound from "./pages/NotFound";
 
 // Initialize the query client with default options that ensure users see feedback
@@ -60,6 +63,14 @@ const App = () => (
                   } 
                 />
                 <Route 
+                  path="/admin/account" 
+                  element={
+                    <ProtectedRoute allowedRoles={["admin"]}>
+                      <AdminAccount />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
                   path="/fixer" 
                   element={
                     <ProtectedRoute allowedRoles={["fixer"]}>
@@ -68,10 +79,26 @@ const App = () => (
                   } 
                 />
                 <Route 
+                  path="/fixer/account" 
+                  element={
+                    <ProtectedRoute allowedRoles={["fixer"]}>
+                      <FixerAccount />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
                   path="/operator" 
                   element={
                     <ProtectedRoute allowedRoles={["operator"]}>
                       <OperatorDashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/operator/account" 
+                  element={
+                    <ProtectedRoute allowedRoles={["operator"]}>
+                      <OperatorAccount />
                     </ProtectedRoute>
                   } 
                 />
