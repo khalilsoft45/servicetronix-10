@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,6 @@ import {
   Menu,
   X,
   Bell,
-  Settings,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -48,25 +48,21 @@ const DashboardLayout = ({ children, title, role = "user" }: DashboardLayoutProp
           { icon: Home, text: "Dashboard", link: "/admin" },
           { icon: ClipboardList, text: "Repairs", link: "/admin/repairs" },
           { icon: User, text: "Users", link: "/admin/users" },
-          { icon: Settings, text: "Account", link: "/admin/account" },
         ];
       case "fixer":
         return [
           { icon: Home, text: "Dashboard", link: "/fixer" },
           { icon: ClipboardList, text: "Assigned Repairs", link: "/fixer/repairs" },
-          { icon: Settings, text: "Account", link: "/fixer/account" },
         ];
       case "operator":
         return [
           { icon: Home, text: "Dashboard", link: "/operator" },
           { icon: ClipboardList, text: "Service Requests", link: "/operator/requests" },
-          { icon: Settings, text: "Account", link: "/operator/account" },
         ];
       case "collector":
         return [
           { icon: Home, text: "Dashboard", link: "/collector" },
           { icon: ClipboardList, text: "Pickup Requests", link: "/collector/pickups" },
-          { icon: Settings, text: "Account", link: "/collector/account" },
         ];
       default: // user
         return [
@@ -111,17 +107,15 @@ const DashboardLayout = ({ children, title, role = "user" }: DashboardLayoutProp
                 <p className="font-medium text-gray-700">{user?.name || "User"}</p>
                 <p className="text-gray-500">{role}</p>
               </div>
-              <Link to={`/${role}/account`}>
-                <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-sala7li-primary transition-all">
-                  {user?.avatar ? (
-                    <AvatarImage src={user.avatar} alt={user.name} />
-                  ) : (
-                    <AvatarFallback className="bg-sala7li-primary text-white">
-                      {user?.name ? getInitials(user.name) : "U"}
-                    </AvatarFallback>
-                  )}
-                </Avatar>
-              </Link>
+              <Avatar className="h-8 w-8">
+                {user?.avatar ? (
+                  <AvatarImage src={user.avatar} alt={user.name} />
+                ) : (
+                  <AvatarFallback className="bg-sala7li-primary text-white">
+                    {user?.name ? getInitials(user.name) : "U"}
+                  </AvatarFallback>
+                )}
+              </Avatar>
             </div>
           </div>
         </div>
