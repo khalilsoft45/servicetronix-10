@@ -24,10 +24,20 @@ const RepairsList = () => {
       setLoading(true);
       
       try {
-        const { data, error } = await supabase
-          .from('repairs')
-          .select('*')
-          .order('date_created', { ascending: false });
+        // If user is not authenticated, exit early
+        if (!user) {
+          setLoading(false);
+          return;
+        }
+
+        let query = supabase.from('repairs').select('*');
+        
+        // If the user is not an admin, operator, fixer, or collector, only show their repairs
+        if (user.role === 'user') {
+          query = query.eq('client_id', user.id);
+        }
+        
+        const { data, error } = await query.order('date_created', { ascending: false });
         
         if (error) throw error;
         
@@ -45,7 +55,15 @@ const RepairsList = () => {
     };
     
     fetchRepairs();
-  }, [toast]);
+  }, [toast, user]);
+
+  const handleCreateRepair = () => {
+    navigate('/dashboard/create-repair');
+  };
+
+  const handleViewDetails = (repairId: string) => {
+    navigate(`/dashboard/repairs/${repairId}`);
+  };
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
@@ -76,11 +94,28 @@ const RepairsList = () => {
     ).join(' ');
   };
 
+  if (!user) {
+    return (
+      <DashboardLayout title="My Repairs">
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <p className="text-gray-500 text-center mb-4">
+              Please sign in to view your repairs.
+            </p>
+            <Button onClick={() => navigate('/signin')} className="bg-sala7li-primary hover:bg-sala7li-primary/90">
+              Sign In
+            </Button>
+          </CardContent>
+        </Card>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout title="My Repairs">
       <div className="mb-6 flex justify-between items-center">
         <h2 className="text-xl font-semibold text-gray-800">All Repairs</h2>
-        <Button className="bg-sala7li-primary hover:bg-sala7li-primary/90">
+        <Button onClick={handleCreateRepair} className="bg-sala7li-primary hover:bg-sala7li-primary/90">
           <PlusCircle className="mr-2 h-4 w-4" />
           Request New Repair
         </Button>
@@ -96,7 +131,7 @@ const RepairsList = () => {
             <p className="text-gray-500 text-center mb-4">
               You don't have any repairs yet. Create your first repair request to get started.
             </p>
-            <Button className="bg-sala7li-primary hover:bg-sala7li-primary/90">
+            <Button onClick={handleCreateRepair} className="bg-sala7li-primary hover:bg-sala7li-primary/90">
               <PlusCircle className="mr-2 h-4 w-4" />
               Request New Repair
             </Button>
@@ -130,7 +165,12 @@ const RepairsList = () => {
                     </div>
                   )}
                   <div className="flex justify-end mt-2">
-                    <Button variant="outline" size="sm" className="text-sala7li-primary border-sala7li-primary hover:bg-sala7li-primary/10">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-sala7li-primary border-sala7li-primary hover:bg-sala7li-primary/10"
+                      onClick={() => handleViewDetails(repair.id)}
+                    >
                       View Details
                     </Button>
                   </div>
