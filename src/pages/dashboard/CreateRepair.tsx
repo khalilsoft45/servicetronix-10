@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
@@ -57,7 +56,7 @@ const CreateRepair = () => {
         .insert({
           client_id: user.id,
           client_name: user.name,
-          client_phone: user.phone || '', // Use empty string if phone is not available
+          client_phone: user.phone || '', // Safe access with fallback to empty string
           device_type: form.deviceType,
           device_model: form.deviceModel,
           issue: form.issue,
@@ -73,7 +72,6 @@ const CreateRepair = () => {
         variant: 'default',
       });
       
-      // Navigate to the repairs list page
       navigate('/dashboard/repairs');
       
     } catch (error) {

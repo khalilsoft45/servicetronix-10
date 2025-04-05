@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/components/ui/use-toast";
@@ -15,6 +14,7 @@ export interface User {
   email: string;
   role: UserRole;
   avatar?: string;
+  phone?: string; // Add phone as an optional property
 }
 
 interface AuthContextType {
@@ -75,6 +75,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           email: profile.email,
           role: profile.role as UserRole,
           avatar: profile.avatar_url,
+          phone: profile.phone,
         });
       }
     } catch (error) {
