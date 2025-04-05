@@ -9,7 +9,178 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      assignments: {
+        Row: {
+          client_address: string
+          client_name: string
+          client_phone: string
+          collector_id: string | null
+          date_assigned: string
+          device_model: string
+          device_type: string
+          id: string
+          is_delivery: boolean
+          notes: string | null
+          repair_id: string
+          status: Database["public"]["Enums"]["assignment_status"]
+          time_window: string | null
+        }
+        Insert: {
+          client_address: string
+          client_name: string
+          client_phone: string
+          collector_id?: string | null
+          date_assigned?: string
+          device_model: string
+          device_type: string
+          id?: string
+          is_delivery?: boolean
+          notes?: string | null
+          repair_id: string
+          status?: Database["public"]["Enums"]["assignment_status"]
+          time_window?: string | null
+        }
+        Update: {
+          client_address?: string
+          client_name?: string
+          client_phone?: string
+          collector_id?: string | null
+          date_assigned?: string
+          device_model?: string
+          device_type?: string
+          id?: string
+          is_delivery?: boolean
+          notes?: string | null
+          repair_id?: string
+          status?: Database["public"]["Enums"]["assignment_status"]
+          time_window?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignments_collector_id_fkey"
+            columns: ["collector_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignments_repair_id_fkey"
+            columns: ["repair_id"]
+            isOneToOne: false
+            referencedRelation: "repairs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          address: string | null
+          avatar_url: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          phone: string | null
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          id: string
+          name: string
+          phone?: string | null
+          role: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      repairs: {
+        Row: {
+          assigned_collector: string | null
+          assigned_fixer: string | null
+          client_id: string | null
+          client_name: string
+          client_phone: string
+          date_created: string
+          device_model: string
+          device_type: string
+          id: string
+          issue: string
+          last_updated: string
+          notes: string | null
+          price: number | null
+          status: Database["public"]["Enums"]["repair_status"]
+        }
+        Insert: {
+          assigned_collector?: string | null
+          assigned_fixer?: string | null
+          client_id?: string | null
+          client_name: string
+          client_phone: string
+          date_created?: string
+          device_model: string
+          device_type: string
+          id?: string
+          issue: string
+          last_updated?: string
+          notes?: string | null
+          price?: number | null
+          status?: Database["public"]["Enums"]["repair_status"]
+        }
+        Update: {
+          assigned_collector?: string | null
+          assigned_fixer?: string | null
+          client_id?: string | null
+          client_name?: string
+          client_phone?: string
+          date_created?: string
+          device_model?: string
+          device_type?: string
+          id?: string
+          issue?: string
+          last_updated?: string
+          notes?: string | null
+          price?: number | null
+          status?: Database["public"]["Enums"]["repair_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "repairs_assigned_collector_fkey"
+            columns: ["assigned_collector"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "repairs_assigned_fixer_fkey"
+            columns: ["assigned_fixer"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "repairs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +189,16 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      assignment_status: "pending" | "in_progress" | "completed" | "cancelled"
+      repair_status:
+        | "pending_confirmation"
+        | "awaiting_collection"
+        | "in_repair"
+        | "waiting_price_confirmation"
+        | "repair_in_progress"
+        | "fixed_awaiting_delivery"
+        | "repair_rejected"
+        | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
