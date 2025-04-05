@@ -57,7 +57,7 @@ const CreateRepair = () => {
         .insert({
           client_id: user.id,
           client_name: user.name,
-          client_phone: user.phone || '', // Fallback to empty string if phone is not available
+          client_phone: user.phone || '', // Use empty string if phone is not available
           device_type: form.deviceType,
           device_model: form.deviceModel,
           issue: form.issue,
