@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -311,7 +310,7 @@ const OperatorDashboard = () => {
       if (repair.id === selectedRepair.id) {
         return {
           ...repair,
-          status: "confirmed_awaiting_collection",
+          status: "confirmed_awaiting_collection" as RepairStatus,
           lastUpdated: new Date().toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }),
           assignedCollector: confirmForm.collectorId,
           notes: confirmForm.notes || repair.notes
@@ -335,7 +334,7 @@ const OperatorDashboard = () => {
       if (repair.id === selectedRepair.id) {
         return {
           ...repair,
-          status: "rejected",
+          status: "rejected" as RepairStatus,
           lastUpdated: new Date().toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }),
           notes: rejectForm.reason || repair.notes
         };
@@ -400,8 +399,8 @@ const OperatorDashboard = () => {
     if (!selectedRepair) return;
 
     const newStatus = callClientForm.accepted 
-      ? "price_confirmed_in_repair"
-      : "price_rejected";
+      ? "price_confirmed_in_repair" as RepairStatus
+      : "price_rejected" as RepairStatus;
 
     const updatedRepairs = repairs.map(repair => {
       if (repair.id === selectedRepair.id) {

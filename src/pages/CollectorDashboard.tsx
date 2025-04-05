@@ -241,7 +241,7 @@ const CollectorDashboard = () => {
       if (assignment.id === selectedAssignment.id) {
         return {
           ...assignment,
-          status: updateForm.newStatus,
+          status: updateForm.newStatus as AssignmentStatus,
           notes: updateForm.notes 
             ? (assignment.notes ? `${assignment.notes}\n${updateForm.notes}` : updateForm.notes)
             : assignment.notes
@@ -254,7 +254,7 @@ const CollectorDashboard = () => {
     setUpdateStatusDialogOpen(false);
     toast({
       title: "Status updated",
-      description: `Assignment status updated to ${getStatusLabel(updateForm.newStatus)}.`
+      description: `Assignment status updated to ${getStatusLabel(updateForm.newStatus as AssignmentStatus)}.`
     });
   };
 
