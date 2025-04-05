@@ -17,6 +17,7 @@ import FixerDashboard from "./pages/FixerDashboard";
 import OperatorDashboard from "./pages/OperatorDashboard";
 import CollectorDashboard from "./pages/CollectorDashboard";
 import NotFound from "./pages/NotFound";
+import RepairsList from "./pages/dashboard/RepairsList";
 
 // Initialize the query client with default options that ensure users see feedback
 const queryClient = new QueryClient({
@@ -41,6 +42,7 @@ const App = () => (
               <Route path="/signin" element={<SignIn />} />
               <Route path="/signup" element={<SignUp />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/dashboard/repairs" element={<RepairsList />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/fixer" element={<FixerDashboard />} />
               <Route path="/operator" element={<OperatorDashboard />} />

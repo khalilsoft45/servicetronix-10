@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { User as SupabaseUser } from '@supabase/supabase-js';
+import { Database } from "@/integrations/supabase/types";
 
 // Define user types
 export type UserRole = 'user' | 'admin' | 'fixer' | 'operator' | 'collector';
